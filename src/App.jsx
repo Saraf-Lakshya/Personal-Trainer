@@ -5,20 +5,44 @@ import SessionPicker from './components/SessionPicker'
 import HistoryView from './components/HistoryView'
 import ProgressView from './components/ProgressView'
 import Navigation from './components/Navigation'
-import { useLocalStorage } from './hooks/useLocalStorage'
+import SignIn from './components/SignIn'
+import { useAuth } from './hooks/useAuth'
+import { useWorkoutData } from './hooks/useWorkoutData'
+
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="text-5xl">🏋️</div>
+        <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    </div>
+  )
+}
 
 export default function App() {
+  const { user, signInWithGoogle, signOut } = useAuth()
+  const { sessions, loading, addSession, deleteSession } = useWorkoutData(user?.id)
+
   const [view, setView] = useState('dashboard')
   const [activeSessionKey, setActiveSessionKey] = useState(null)
-  const [history, setHistory] = useLocalStorage('pt_sessions', [])
+
+  // Still resolving auth state
+  if (user === undefined) return <LoadingScreen />
+
+  // Not signed in
+  if (user === null) return <SignIn onSignIn={signInWithGoogle} />
+
+  // Signed in but data loading
+  if (loading) return <LoadingScreen />
 
   const handleStartWorkout = (sessionKey) => {
     setActiveSessionKey(sessionKey)
     setView('workout')
   }
 
-  const handleCompleteWorkout = (record) => {
-    setHistory(prev => [...prev, record])
+  const handleCompleteWorkout = async (record) => {
+    await addSession(record)
     setActiveSessionKey(null)
     setView('dashboard')
   }
@@ -28,17 +52,9 @@ export default function App() {
     setView('picker')
   }
 
-  const handleDeleteSession = (id) => {
-    setHistory(prev => prev.filter(s => s.id !== id))
-  }
-
   const handleNavigate = (newView) => {
     if (newView === 'workout') {
-      if (activeSessionKey) {
-        setView('workout')
-      } else {
-        setView('picker')
-      }
+      setView(activeSessionKey ? 'workout' : 'picker')
       return
     }
     setView(newView)
@@ -49,7 +65,7 @@ export default function App() {
       {view === 'workout' && activeSessionKey ? (
         <WorkoutSession
           sessionKey={activeSessionKey}
-          history={history}
+          history={sessions}
           onComplete={handleCompleteWorkout}
           onCancel={handleCancelWorkout}
         />
@@ -57,22 +73,21 @@ export default function App() {
         <>
           {view === 'dashboard' && (
             <Dashboard
-              history={history}
+              history={sessions}
+              user={user}
               onStartWorkout={handleStartWorkout}
               onNavigate={handleNavigate}
+              onSignOut={signOut}
             />
           )}
           {(view === 'picker' || view === 'workout') && (
-            <SessionPicker
-              history={history}
-              onStartWorkout={handleStartWorkout}
-            />
+            <SessionPicker history={sessions} onStartWorkout={handleStartWorkout} />
           )}
           {view === 'history' && (
-            <HistoryView history={history} onDelete={handleDeleteSession} />
+            <HistoryView history={sessions} onDelete={deleteSession} />
           )}
           {view === 'progress' && (
-            <ProgressView history={history} />
+            <ProgressView history={sessions} />
           )}
           <Navigation
             current={view === 'picker' ? 'workout' : view}

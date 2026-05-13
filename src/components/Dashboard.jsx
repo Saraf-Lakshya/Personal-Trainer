@@ -52,7 +52,7 @@ function formatDate(isoStr) {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
-export default function Dashboard({ history, onStartWorkout, onNavigate }) {
+export default function Dashboard({ history, user, onStartWorkout, onNavigate, onSignOut }) {
   const nextSession = getNextSession(history)
   const { weekType, isWorkout, todayName, nextWorkoutDay } = getTodayScheduleInfo()
   const streak = getStreak(history)
@@ -79,9 +79,19 @@ export default function Dashboard({ history, onStartWorkout, onNavigate }) {
             <p className="text-gray-500 text-sm">Welcome back 👋</p>
             <h1 className="text-2xl font-bold text-white mt-0.5">{todayName}</h1>
           </div>
-          <span className="text-xs font-semibold bg-gray-800 text-gray-300 px-3 py-1.5 rounded-full border border-gray-700">
-            Week {weekType}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold bg-gray-800 text-gray-300 px-3 py-1.5 rounded-full border border-gray-700">
+              Week {weekType}
+            </span>
+            <button onClick={onSignOut} title="Sign out" className="active:opacity-70">
+              {user?.user_metadata?.avatar_url
+                ? <img src={user.user_metadata.avatar_url} alt="" className="w-8 h-8 rounded-full border border-gray-700" />
+                : <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs text-gray-300 font-bold">
+                    {(user?.user_metadata?.full_name ?? user?.email ?? '?')[0].toUpperCase()}
+                  </div>
+              }
+            </button>
+          </div>
         </div>
         <div className="mt-2">
           {isWorkout
