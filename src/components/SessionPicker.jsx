@@ -1,0 +1,88 @@
+import { Play, Zap } from 'lucide-react'
+import { SESSIONS, getSessionColor, getTodayScheduleInfo } from '../data/workoutPlan'
+
+const SESSION_ORDER = ['A', 'B', 'C', 'D']
+
+function getNextSession(history) {
+  if (!history.length) return 'A'
+  const last = history[history.length - 1].sessionKey
+  const idx = SESSION_ORDER.indexOf(last)
+  return SESSION_ORDER[(idx + 1) % SESSION_ORDER.length]
+}
+
+export default function SessionPicker({ history, onStartWorkout }) {
+  const { weekType, isWorkout, todayName } = getTodayScheduleInfo()
+  const nextSession = getNextSession(history)
+
+  return (
+    <div className="min-h-screen bg-gray-950">
+      <div className="px-5 pt-12 pb-4">
+        <p className="text-gray-500 text-sm">{todayName}</p>
+        <h1 className="text-2xl font-bold text-white mt-1">Start Workout</h1>
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-xs font-semibold bg-gray-800 text-gray-300 px-2.5 py-1 rounded-full border border-gray-700">
+            Week {weekType}
+          </span>
+          {isWorkout
+            ? <span className="text-xs text-orange-400 font-medium">Workout day 🔥</span>
+            : <span className="text-xs text-gray-500">Rest day — but you can still train</span>
+          }
+        </div>
+      </div>
+
+      <div className="px-4 pb-32 space-y-3">
+        {SESSION_ORDER.map(key => {
+          const s = SESSIONS[key]
+          const c = getSessionColor(key)
+          const isNext = key === nextSession
+
+          return (
+            <button
+              key={key}
+              onClick={() => onStartWorkout(key)}
+              className={`w-full p-5 rounded-2xl border text-left transition-colors active:opacity-80 ${
+                isNext
+                  ? `${c.border} ${c.light} border-2`
+                  : 'border-gray-800 bg-gray-900/50'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{s.emoji}</span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${c.bg} text-white`}>
+                        Session {key}
+                      </span>
+                      {isNext && (
+                        <span className="text-xs text-orange-400 font-medium">Up next</span>
+                      )}
+                    </div>
+                    <p className="font-bold text-white text-lg mt-0.5">{s.label}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{s.muscles}</p>
+                  </div>
+                </div>
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                  isNext ? `${c.bg}` : 'bg-gray-800'
+                }`}>
+                  <Play size={18} fill="white" className="text-white ml-0.5" />
+                </div>
+              </div>
+
+              <div className="flex gap-1.5 mt-3 flex-wrap">
+                {s.exercises.slice(0, 4).map(ex => (
+                  <span key={ex.id} className="text-xs text-gray-500 bg-gray-800/80 px-2 py-0.5 rounded-full">
+                    {ex.name.split(' ').slice(0, 2).join(' ')}
+                  </span>
+                ))}
+                {s.exercises.length > 4 && (
+                  <span className="text-xs text-gray-600 px-2 py-0.5">+{s.exercises.length - 4}</span>
+                )}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}

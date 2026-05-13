@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Dashboard from './components/Dashboard'
 import WorkoutSession from './components/WorkoutSession'
+import SessionPicker from './components/SessionPicker'
 import HistoryView from './components/HistoryView'
 import ProgressView from './components/ProgressView'
 import Navigation from './components/Navigation'
@@ -24,7 +25,7 @@ export default function App() {
 
   const handleCancelWorkout = () => {
     setActiveSessionKey(null)
-    setView('dashboard')
+    setView('picker')
   }
 
   const handleDeleteSession = (id) => {
@@ -32,12 +33,12 @@ export default function App() {
   }
 
   const handleNavigate = (newView) => {
-    if (newView === 'workout' && activeSessionKey) {
-      setView('workout')
-      return
-    }
-    if (newView === 'workout' && !activeSessionKey) {
-      setView('dashboard')
+    if (newView === 'workout') {
+      if (activeSessionKey) {
+        setView('workout')
+      } else {
+        setView('picker')
+      }
       return
     }
     setView(newView)
@@ -61,6 +62,12 @@ export default function App() {
               onNavigate={handleNavigate}
             />
           )}
+          {(view === 'picker' || view === 'workout') && (
+            <SessionPicker
+              history={history}
+              onStartWorkout={handleStartWorkout}
+            />
+          )}
           {view === 'history' && (
             <HistoryView history={history} onDelete={handleDeleteSession} />
           )}
@@ -68,7 +75,7 @@ export default function App() {
             <ProgressView history={history} />
           )}
           <Navigation
-            current={view}
+            current={view === 'picker' ? 'workout' : view}
             onNavigate={handleNavigate}
             activeSession={!!activeSessionKey}
           />

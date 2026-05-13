@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Play, Calendar, Flame, TrendingUp, ChevronRight, RotateCcw, Dumbbell } from 'lucide-react'
-import { SESSIONS, SESSION_META, WEEKS, getSessionColor } from '../data/workoutPlan'
+import { Play, Calendar, Flame, TrendingUp, Dumbbell } from 'lucide-react'
+import { SESSIONS, SESSION_META, getSessionColor, getTodayScheduleInfo } from '../data/workoutPlan'
 
 const SESSION_ORDER = ['A', 'B', 'C', 'D']
 
@@ -9,12 +9,6 @@ function getNextSession(history) {
   const last = history[history.length - 1].sessionKey
   const idx = SESSION_ORDER.indexOf(last)
   return SESSION_ORDER[(idx + 1) % SESSION_ORDER.length]
-}
-
-function getWeekType(history) {
-  const total = history.length
-  const weekNum = Math.floor(total / 3.5)
-  return weekNum % 2 === 0 ? 'A' : 'B'
 }
 
 function getStreak(history) {
@@ -60,7 +54,7 @@ function formatDate(isoStr) {
 
 export default function Dashboard({ history, onStartWorkout, onNavigate }) {
   const nextSession = getNextSession(history)
-  const weekType = getWeekType(history)
+  const { weekType, isWorkout, todayName, nextWorkoutDay } = getTodayScheduleInfo()
   const streak = getStreak(history)
   const recentSessions = [...history].reverse().slice(0, 4)
   const nextSessionData = SESSIONS[nextSession]
@@ -68,7 +62,8 @@ export default function Dashboard({ history, onStartWorkout, onNavigate }) {
 
   const weekSessions = (() => {
     const weekStart = new Date()
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay())
+    const dow = weekStart.getDay()
+    weekStart.setDate(weekStart.getDate() - (dow === 0 ? 6 : dow - 1))
     weekStart.setHours(0, 0, 0, 0)
     return history.filter(h => new Date(h.date) >= weekStart).length
   })()
@@ -79,16 +74,20 @@ export default function Dashboard({ history, onStartWorkout, onNavigate }) {
     <div className="min-h-screen bg-gray-950">
       {/* Header */}
       <div className="px-5 pt-12 pb-6">
-        <p className="text-gray-500 text-sm">Welcome back 👋</p>
-        <h1 className="text-2xl font-bold text-white mt-1">Your Trainer</h1>
-
-        <div className="flex items-center gap-2 mt-3">
-          <span className="text-xs font-semibold bg-gray-800 text-gray-300 px-3 py-1 rounded-full border border-gray-700">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-gray-500 text-sm">Welcome back 👋</p>
+            <h1 className="text-2xl font-bold text-white mt-0.5">{todayName}</h1>
+          </div>
+          <span className="text-xs font-semibold bg-gray-800 text-gray-300 px-3 py-1.5 rounded-full border border-gray-700">
             Week {weekType}
           </span>
-          <span className="text-xs text-gray-500">
-            {WEEKS[weekType].days.join(' · ')}
-          </span>
+        </div>
+        <div className="mt-2">
+          {isWorkout
+            ? <p className="text-sm text-orange-400 font-medium">Workout day 🔥 — {nextSessionData.label} up next</p>
+            : <p className="text-sm text-gray-500">Rest day{nextWorkoutDay ? ` · Next workout: ${nextWorkoutDay}` : ''}</p>
+          }
         </div>
       </div>
 

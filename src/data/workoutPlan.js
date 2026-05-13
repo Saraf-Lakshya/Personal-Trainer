@@ -1,18 +1,63 @@
-// Week A: Tue / Thu / Sat (3 sessions)
-// Week B: Mon / Wed / Fri / Sat (4 sessions)
+// Week A: Mon / Wed / Fri / Sat (4 sessions)
+// Week B: Tue / Thu / Sat (3 sessions)
 // Sessions rotate A → B → C → D → A ...
 // Duration: ~45-50 min, fasted 9-10am
 
 export const SESSION_META = {
   A: { label: 'Push', color: 'orange', emoji: '💪', muscles: 'Chest · Shoulders · Triceps' },
-  B: { label: 'Pull', color: 'blue', emoji: '🔙', muscles: 'Back · Biceps · Rear Delts' },
+  B: { label: 'Pull', color: 'blue', emoji: '🦾', muscles: 'Back · Biceps · Rear Delts' },
   C: { label: 'Legs', color: 'green', emoji: '🦵', muscles: 'Quads · Hamstrings · Calves' },
   D: { label: 'Core + Cardio', color: 'purple', emoji: '🫀', muscles: 'Core · Cardiovascular' },
 }
 
 export const WEEKS = {
-  A: { days: ['Tuesday', 'Thursday', 'Saturday'], count: 3 },
-  B: { days: ['Monday', 'Wednesday', 'Friday', 'Saturday'], count: 4 },
+  A: { days: ['Monday', 'Wednesday', 'Friday', 'Saturday'], count: 4 },
+  B: { days: ['Tuesday', 'Thursday', 'Saturday'], count: 3 },
+}
+
+// Week A reference: Monday 11 May 2026 (first Week A)
+const WEEK_A_REF = new Date('2026-05-11T00:00:00')
+
+// Days of week that are workout days per week type (0=Sun … 6=Sat)
+export const WEEK_WORKOUT_DAYS = {
+  A: [1, 3, 5, 6], // Mon, Wed, Fri, Sat
+  B: [2, 4, 6],    // Tue, Thu, Sat
+}
+
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const DAY_SHORT  = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+export function getCurrentWeekType() {
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  const dow = now.getDay()
+  // Rewind to Monday of this week
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1))
+  const weeksSinceRef = Math.round((monday - WEEK_A_REF) / (7 * 24 * 60 * 60 * 1000))
+  return weeksSinceRef % 2 === 0 ? 'A' : 'B'
+}
+
+export function getTodayScheduleInfo() {
+  const weekType = getCurrentWeekType()
+  const now = new Date()
+  const dow = now.getDay()
+  const isWorkout = WEEK_WORKOUT_DAYS[weekType].includes(dow)
+  const todayName = DAY_NAMES[dow]
+
+  let nextWorkoutDay = null
+  if (!isWorkout) {
+    for (let i = 1; i <= 7; i++) {
+      const next = (dow + i) % 7
+      if (WEEK_WORKOUT_DAYS[weekType].includes(next) ||
+          WEEK_WORKOUT_DAYS[weekType === 'A' ? 'B' : 'A'].includes(next)) {
+        nextWorkoutDay = DAY_NAMES[next]
+        break
+      }
+    }
+  }
+
+  return { weekType, isWorkout, todayName, nextWorkoutDay, dow }
 }
 
 export const SESSIONS = {
