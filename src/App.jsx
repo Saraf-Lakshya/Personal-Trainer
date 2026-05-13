@@ -21,7 +21,7 @@ function LoadingScreen() {
 }
 
 export default function App() {
-  const { user, signInWithGoogle, signOut } = useAuth()
+  const { user, signOut } = useAuth()
   const { sessions, loading, addSession, deleteSession } = useWorkoutData(user?.id)
 
   const [view, setView] = useState('dashboard')
@@ -31,7 +31,7 @@ export default function App() {
   if (user === undefined) return <LoadingScreen />
 
   // Not signed in
-  if (user === null) return <SignIn onSignIn={signInWithGoogle} />
+  if (user === null) return <SignIn />
 
   // Signed in but data loading
   if (loading) return <LoadingScreen />

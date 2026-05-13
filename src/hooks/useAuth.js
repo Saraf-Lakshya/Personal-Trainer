@@ -16,15 +16,7 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signInWithGoogle = () =>
-    supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.href.split('?')[0].split('#')[0],
-      },
-    })
-
   const signOut = () => supabase.auth.signOut()
 
-  return { user, signInWithGoogle, signOut }
+  return { user, signOut }
 }
