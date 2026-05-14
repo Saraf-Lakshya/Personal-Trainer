@@ -2,14 +2,20 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
 export function useAuth() {
-  const [user, setUser] = useState(undefined) // undefined = still loading
+  const [user, setUser] = useState(undefined)
+  const [recoveryMode, setRecoveryMode] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setRecoveryMode(true)
+      } else {
+        setRecoveryMode(false)
+      }
       setUser(session?.user ?? null)
     })
 
@@ -18,5 +24,5 @@ export function useAuth() {
 
   const signOut = () => supabase.auth.signOut()
 
-  return { user, signOut }
+  return { user, recoveryMode, signOut }
 }

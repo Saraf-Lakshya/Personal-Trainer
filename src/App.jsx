@@ -6,6 +6,7 @@ import HistoryView from './components/HistoryView'
 import ProgressView from './components/ProgressView'
 import Navigation from './components/Navigation'
 import SignIn from './components/SignIn'
+import UpdatePassword from './components/UpdatePassword'
 import { useAuth } from './hooks/useAuth'
 import { useWorkoutData } from './hooks/useWorkoutData'
 
@@ -21,7 +22,7 @@ function LoadingScreen() {
 }
 
 export default function App() {
-  const { user, signOut } = useAuth()
+  const { user, recoveryMode, signOut } = useAuth()
   const { sessions, loading, addSession, deleteSession } = useWorkoutData(user?.id)
 
   const [view, setView] = useState('dashboard')
@@ -29,6 +30,9 @@ export default function App() {
 
   // Still resolving auth state
   if (user === undefined) return <LoadingScreen />
+
+  // Password reset link was clicked — show set-password form
+  if (recoveryMode) return <UpdatePassword />
 
   // Not signed in
   if (user === null) return <SignIn />
