@@ -6,8 +6,6 @@ export default function UpdatePassword() {
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [done, setDone] = useState(false)
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (password !== confirm) { setError("Passwords don't match."); return }
@@ -15,18 +13,8 @@ export default function UpdatePassword() {
     setError(null)
     const { error } = await supabase.auth.updateUser({ password })
     if (error) setError(error.message)
-    else setDone(true)
+    // On success, USER_UPDATED fires → recoveryMode clears → app loads automatically
     setLoading(false)
-  }
-
-  if (done) {
-    return (
-      <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center px-6 text-center">
-        <div className="text-6xl mb-5">✅</div>
-        <h2 className="text-xl font-bold text-white">Password set!</h2>
-        <p className="text-gray-400 mt-2 text-sm">Open the app on your home screen and sign in with your new password.</p>
-      </div>
-    )
   }
 
   return (

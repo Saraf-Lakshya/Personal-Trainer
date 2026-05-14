@@ -11,12 +11,13 @@ export function useAuth() {
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null)
       if (event === 'PASSWORD_RECOVERY') {
         setRecoveryMode(true)
-      } else {
+      } else if (event === 'USER_UPDATED' || event === 'SIGNED_OUT') {
         setRecoveryMode(false)
       }
-      setUser(session?.user ?? null)
+      // SIGNED_IN fires right after PASSWORD_RECOVERY — intentionally not resetting here
     })
 
     return () => subscription.unsubscribe()
