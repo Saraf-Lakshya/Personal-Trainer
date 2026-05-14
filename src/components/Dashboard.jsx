@@ -52,7 +52,8 @@ function formatDate(isoStr) {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
-export default function Dashboard({ history, user, onStartWorkout, onNavigate, onSignOut }) {
+export default function Dashboard({ history, user, onStartWorkout, onNavigate, onSignOut, onChangePassword }) {
+  const [showMenu, setShowMenu] = useState(false)
   const nextSession = getNextSession(history)
   const { weekType, isWorkout, todayName, nextWorkoutDay } = getTodayScheduleInfo()
   const streak = getStreak(history)
@@ -83,14 +84,38 @@ export default function Dashboard({ history, user, onStartWorkout, onNavigate, o
             <span className="text-xs font-semibold bg-gray-800 text-gray-300 px-3 py-1.5 rounded-full border border-gray-700">
               Week {weekType}
             </span>
-            <button onClick={onSignOut} title="Sign out" className="active:opacity-70">
-              {user?.user_metadata?.avatar_url
-                ? <img src={user.user_metadata.avatar_url} alt="" className="w-8 h-8 rounded-full border border-gray-700" />
-                : <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs text-gray-300 font-bold">
-                    {(user?.user_metadata?.full_name ?? user?.email ?? '?')[0].toUpperCase()}
+            <div className="relative">
+              <button onClick={() => setShowMenu(m => !m)} className="active:opacity-70">
+                {user?.user_metadata?.avatar_url
+                  ? <img src={user.user_metadata.avatar_url} alt="" className="w-8 h-8 rounded-full border border-gray-700" />
+                  : <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs text-gray-300 font-bold">
+                      {(user?.user_metadata?.full_name ?? user?.email ?? '?')[0].toUpperCase()}
+                    </div>
+                }
+              </button>
+              {showMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+                  <div className="absolute right-0 top-10 z-50 w-44 bg-gray-800 border border-gray-700 rounded-xl overflow-hidden shadow-2xl animate-fade-in">
+                    <div className="px-3 py-2.5 border-b border-gray-700">
+                      <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                    </div>
+                    <button
+                      onClick={() => { setShowMenu(false); onChangePassword() }}
+                      className="w-full px-3 py-3 text-left text-sm text-gray-200 active:bg-gray-700"
+                    >
+                      🔑 Change Password
+                    </button>
+                    <button
+                      onClick={() => { setShowMenu(false); onSignOut() }}
+                      className="w-full px-3 py-3 text-left text-sm text-red-400 active:bg-gray-700 border-t border-gray-700"
+                    >
+                      Sign Out
+                    </button>
                   </div>
-              }
-            </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
         <div className="mt-2">

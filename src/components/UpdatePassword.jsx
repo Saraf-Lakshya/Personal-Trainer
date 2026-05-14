@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-export default function UpdatePassword() {
+export default function UpdatePassword({ onCancel }) {
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
@@ -18,11 +18,16 @@ export default function UpdatePassword() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center px-6">
+    <div className="relative min-h-screen bg-gray-950 flex flex-col items-center justify-center px-6">
+      {onCancel && (
+        <button onClick={onCancel} className="absolute top-12 left-5 text-gray-500 text-sm active:text-gray-300">
+          ← Back
+        </button>
+      )}
       <div className="text-center mb-10">
         <div className="text-7xl mb-5">🔑</div>
-        <h1 className="text-2xl font-bold text-white">Set your password</h1>
-        <p className="text-gray-400 mt-2 text-sm">Choose a password for your account.</p>
+        <h1 className="text-2xl font-bold text-white">Change Password</h1>
+        <p className="text-gray-400 mt-2 text-sm">Choose a new password for your account.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="w-full max-w-xs space-y-3">

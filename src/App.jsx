@@ -27,12 +27,15 @@ export default function App() {
 
   const [view, setView] = useState('dashboard')
   const [activeSessionKey, setActiveSessionKey] = useState(null)
+  const [changingPassword, setChangingPassword] = useState(false)
 
   // Still resolving auth state
   if (user === undefined) return <LoadingScreen />
 
-  // Password reset link was clicked — show set-password form
-  if (recoveryMode) return <UpdatePassword />
+  // Password reset link was clicked, or user chose to change password
+  if (recoveryMode || changingPassword) return (
+    <UpdatePassword onCancel={changingPassword ? () => setChangingPassword(false) : null} />
+  )
 
   // Not signed in
   if (user === null) return <SignIn />
@@ -82,6 +85,7 @@ export default function App() {
               onStartWorkout={handleStartWorkout}
               onNavigate={handleNavigate}
               onSignOut={signOut}
+              onChangePassword={() => setChangingPassword(true)}
             />
           )}
           {(view === 'picker' || view === 'workout') && (
