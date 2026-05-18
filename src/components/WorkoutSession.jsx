@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ArrowLeft, CheckCircle, Timer, Zap, Plus, Pencil, X } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Timer, Zap, Plus, Pencil, X, RotateCcw } from 'lucide-react'
 import { SESSIONS, getSessionColor } from '../data/workoutPlan'
 import ExerciseCard from './ExerciseCard'
 import RestTimer from './RestTimer'
@@ -26,10 +26,8 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
   const session = SESSIONS[sessionKey]
   const colors = getSessionColor(sessionKey)
 
-  // Phase: warmup → workout → cooldown
   const [phase, setPhase] = useState('warmup')
 
-  // Modifiable exercise list (supports add/delete)
   const [exercises, setExercises] = useState(() => session.exercises)
   const [exerciseStates, setExerciseStates] = useState(() =>
     session.exercises.map(ex => ({
@@ -45,18 +43,57 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
   const [newExReps, setNewExReps] = useState(10)
   const [cooldownRecord, setCooldownRecord] = useState(null)
 
-  // Elapsed timer — only counts during workout phase
+  // Undo toast state
+  const [pendingUndo, setPendingUndo] = useState(null) // { label, onUndo }
+  const [undoSecsLeft, setUndoSecsLeft] = useState(0)
+  const undoTimerRef = useRef(null)
+  const undoTickRef = useRef(null)
+
+  // Elapsed timer — only counts during workout phase; never reset once started
   const [elapsed, setElapsed] = useState(0)
   const workoutStartRef = useRef(null)
 
   useEffect(() => {
     if (phase !== 'workout') return
-    workoutStartRef.current = Date.now()
+    // Only set the start time once — don't reset it if effect re-runs
+    if (!workoutStartRef.current) workoutStartRef.current = Date.now()
     const t = setInterval(() => {
       setElapsed(Math.floor((Date.now() - workoutStartRef.current) / 1000))
     }, 1000)
     return () => clearInterval(t)
   }, [phase])
+
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+      if (undoTickRef.current) clearInterval(undoTickRef.current)
+    }
+  }, [])
+
+  const triggerUndo = (label, onUndo) => {
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+    if (undoTickRef.current) clearInterval(undoTickRef.current)
+    setPendingUndo({ label, onUndo })
+    setUndoSecsLeft(5)
+    undoTickRef.current = setInterval(() => {
+      setUndoSecsLeft(s => Math.max(0, s - 1))
+    }, 1000)
+    undoTimerRef.current = setTimeout(() => {
+      setPendingUndo(null)
+      clearInterval(undoTickRef.current)
+      undoTimerRef.current = null
+      undoTickRef.current = null
+    }, 5000)
+  }
+
+  const handleUndo = () => {
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+    if (undoTickRef.current) clearInterval(undoTickRef.current)
+    undoTimerRef.current = null
+    undoTickRef.current = null
+    if (pendingUndo) pendingUndo.onUndo()
+    setPendingUndo(null)
+  }
 
   const totalSets = exercises.reduce((acc, ex) => acc + (ex.isCardio ? 1 : ex.sets), 0)
   const completedSets = exerciseStates.reduce((acc, es) => acc + es.sets.filter(s => s.completed).length, 0)
@@ -72,21 +109,23 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
     ))
   }
 
+  // Fix: derive all-done check from the updated state inside the functional setter
   const toggleSet = (exIdx, setIdx, completed) => {
-    setExerciseStates(prev => prev.map((es, i) =>
-      i !== exIdx ? es : {
-        ...es,
-        sets: es.sets.map((s, j) => j === setIdx ? { ...s, completed } : s),
+    setExerciseStates(prev => {
+      const updated = prev.map((es, i) =>
+        i !== exIdx ? es : {
+          ...es,
+          sets: es.sets.map((s, j) => j === setIdx ? { ...s, completed } : s),
+        }
+      )
+      if (completed) {
+        const allExDone = updated[exIdx].sets.every(s => s.completed)
+        if (allExDone && exIdx < exercises.length - 1) {
+          setTimeout(() => setExpandedIdx(exIdx + 1), 400)
+        }
       }
-    ))
-    if (completed) {
-      const allExDone = exerciseStates[exIdx].sets
-        .map((s, j) => j === setIdx ? { ...s, completed: true } : s)
-        .every(s => s.completed)
-      if (allExDone && exIdx < exercises.length - 1) {
-        setTimeout(() => setExpandedIdx(exIdx + 1), 400)
-      }
-    }
+      return updated
+    })
   }
 
   const addCustomExercise = () => {
@@ -107,13 +146,24 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
     setNewExName('')
     setNewExSets(3)
     setNewExReps(10)
+    triggerUndo(`Added "${newEx.name}"`, () => {
+      setExercises(prev => prev.filter(e => e.id !== newEx.id))
+      setExerciseStates(prev => prev.slice(0, -1))
+    })
   }
 
   const deleteExercise = (idx) => {
+    const removedEx = exercises[idx]
+    const removedState = exerciseStates[idx]
     setExercises(prev => prev.filter((_, i) => i !== idx))
     setExerciseStates(prev => prev.filter((_, i) => i !== idx))
     if (expandedIdx === idx) setExpandedIdx(-1)
     else if (expandedIdx > idx) setExpandedIdx(expandedIdx - 1)
+    triggerUndo(`Removed "${removedEx.name}"`, () => {
+      setExercises(prev => [...prev.slice(0, idx), removedEx, ...prev.slice(idx)])
+      setExerciseStates(prev => [...prev.slice(0, idx), removedState, ...prev.slice(idx)])
+      setExpandedIdx(idx)
+    })
   }
 
   const handleFinish = () => {
@@ -128,7 +178,6 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
         sets: exerciseStates[i].sets,
       })),
     }
-    // Store record and move to cooldown; onComplete called after cooldown
     setCooldownRecord(record)
     setPhase('cooldown')
   }
@@ -179,7 +228,6 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
           )}
         </div>
 
-        {/* Progress bar — only in workout phase */}
         {phase === 'workout' && (
           <>
             <div className="h-1 mx-4 mb-3 bg-gray-800 rounded-full overflow-hidden">
@@ -196,12 +244,10 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
         )}
       </div>
 
-      {/* Warmup phase */}
       {phase === 'warmup' && (
         <WarmupCooldown phase="warmup" onDone={() => setPhase('workout')} />
       )}
 
-      {/* Workout phase */}
       {phase === 'workout' && (
         <>
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-36">
@@ -221,7 +267,6 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
               />
             ))}
 
-            {/* Add exercise form (edit mode) */}
             {editMode && (
               <div className="rounded-2xl border border-dashed border-gray-600 bg-gray-900/40 p-4 space-y-3">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Add Exercise</p>
@@ -265,6 +310,26 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
             )}
           </div>
 
+          {/* Undo toast */}
+          {pendingUndo && (
+            <div className="fixed bottom-36 left-4 right-4 z-40 overflow-hidden rounded-2xl bg-gray-700 border border-gray-600 shadow-xl">
+              <div
+                className="h-0.5 bg-orange-500 transition-[width] duration-[950ms] ease-linear"
+                style={{ width: `${undoSecsLeft * 20}%` }}
+              />
+              <div className="flex items-center justify-between px-4 py-3">
+                <span className="text-white text-sm">{pendingUndo.label}</span>
+                <button
+                  onClick={handleUndo}
+                  className="flex items-center gap-1.5 text-orange-400 font-semibold text-sm active:text-orange-300 ml-4"
+                >
+                  <RotateCcw size={13} />
+                  Undo
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Finish button */}
           <div className="fixed bottom-20 left-4 right-4 z-30">
             <button
@@ -284,12 +349,10 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
         </>
       )}
 
-      {/* Cooldown phase */}
       {phase === 'cooldown' && (
         <WarmupCooldown phase="cooldown" onDone={handleCooldownDone} />
       )}
 
-      {/* Rest timer overlay */}
       {restTimer && (
         <RestTimer
           duration={restTimer.duration}

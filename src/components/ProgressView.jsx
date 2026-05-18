@@ -38,7 +38,7 @@ function getWeeklyVolume(history) {
   history.forEach(session => {
     const d = new Date(session.date)
     const weekStart = new Date(d)
-    weekStart.setDate(d.getDate() - d.getDay())
+    weekStart.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1))
     weekStart.setHours(0, 0, 0, 0)
     const key = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     const vol = (session.exercises || []).reduce((acc, ex) =>

@@ -32,6 +32,7 @@ export function useWorkoutData(userId) {
     supabase
       .from('sessions')
       .select('*')
+      .eq('user_id', userId)
       .order('date', { ascending: true })
       .then(({ data, error }) => {
         if (!error) setSessions((data ?? []).map(fromDb))
@@ -49,7 +50,11 @@ export function useWorkoutData(userId) {
   }, [userId])
 
   const deleteSession = useCallback(async (id) => {
-    const { error } = await supabase.from('sessions').delete().eq('id', id)
+    const { error } = await supabase
+      .from('sessions')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId)
     if (!error) setSessions(prev => prev.filter(s => s.id !== id))
   }, [userId])
 
