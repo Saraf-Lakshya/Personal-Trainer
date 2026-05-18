@@ -1,5 +1,5 @@
-// Week A: Mon / Wed / Fri / Sat (4 sessions)
-// Week B: Tue / Thu / Sat (3 sessions)
+// Week A: Mon / Tue / Thu / Sat (4 sessions)
+// Week B: Mon / Wed / Fri / Sat (4 sessions)
 // Sessions rotate A → B → C → D → A ...
 // Duration: ~45-50 min, fasted 9-10am
 
@@ -11,17 +11,17 @@ export const SESSION_META = {
 }
 
 export const WEEKS = {
-  A: { days: ['Monday', 'Wednesday', 'Friday', 'Saturday'], count: 4 },
-  B: { days: ['Tuesday', 'Thursday', 'Saturday'], count: 3 },
+  A: { days: ['Monday', 'Tuesday', 'Thursday', 'Saturday'], count: 4 },
+  B: { days: ['Monday', 'Wednesday', 'Friday', 'Saturday'], count: 4 },
 }
 
-// Week A reference: Monday 11 May 2026 (first Week A)
-const WEEK_A_REF = new Date('2026-05-11T00:00:00')
+// Week A reference: Monday 18 May 2026 (current week is Week A)
+const WEEK_A_REF = new Date('2026-05-18T00:00:00')
 
 // Days of week that are workout days per week type (0=Sun … 6=Sat)
 export const WEEK_WORKOUT_DAYS = {
-  A: [1, 3, 5, 6], // Mon, Wed, Fri, Sat
-  B: [2, 4, 6],    // Tue, Thu, Sat
+  A: [1, 2, 4, 6], // Mon, Tue, Thu, Sat
+  B: [1, 3, 5, 6], // Mon, Wed, Fri, Sat
 }
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -70,7 +70,7 @@ export const SESSIONS = {
         name: 'Dumbbell Bench Press',
         sets: 3,
         reps: 10,
-        rest: 90,
+        rest: 60,
         muscles: ['Chest', 'Front Delt', 'Triceps'],
         cues: [
           'Retract and depress shoulder blades into bench',
@@ -85,7 +85,7 @@ export const SESSIONS = {
         name: 'Dumbbell Shoulder Press',
         sets: 3,
         reps: 10,
-        rest: 90,
+        rest: 60,
         muscles: ['Front Delt', 'Lateral Delt', 'Triceps'],
         cues: [
           'Sit upright, dumbbells at ear level, palms forward',
@@ -100,7 +100,7 @@ export const SESSIONS = {
         name: 'Incline Dumbbell Press',
         sets: 3,
         reps: 10,
-        rest: 90,
+        rest: 60,
         muscles: ['Upper Chest', 'Front Delt', 'Triceps'],
         cues: [
           'Set bench to 30–45° — steeper hits more shoulder',
@@ -152,7 +152,7 @@ export const SESSIONS = {
         name: 'Lat Pulldown',
         sets: 3,
         reps: 10,
-        rest: 90,
+        rest: 60,
         muscles: ['Lats', 'Biceps', 'Rear Delt'],
         cues: [
           'Grip slightly wider than shoulder width, overhand',
@@ -167,7 +167,7 @@ export const SESSIONS = {
         name: 'Seated Cable Row',
         sets: 3,
         reps: 10,
-        rest: 90,
+        rest: 60,
         muscles: ['Mid Back', 'Lats', 'Biceps'],
         cues: [
           'Sit tall — don\'t round your lower back',
@@ -235,7 +235,7 @@ export const SESSIONS = {
         name: 'Leg Press',
         sets: 3,
         reps: 12,
-        rest: 90,
+        rest: 60,
         muscles: ['Quads', 'Glutes', 'Hamstrings'],
         cues: [
           'Feet hip-width apart, mid to upper portion of platform',
@@ -250,7 +250,7 @@ export const SESSIONS = {
         name: 'Romanian Deadlift',
         sets: 3,
         reps: 10,
-        rest: 90,
+        rest: 60,
         muscles: ['Hamstrings', 'Glutes', 'Lower Back'],
         note: 'Dumbbells',
         cues: [
