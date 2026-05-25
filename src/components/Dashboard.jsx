@@ -1,14 +1,11 @@
 import { useState } from 'react'
 import { Play, Calendar, Flame, TrendingUp, Dumbbell } from 'lucide-react'
-import { SESSIONS, SESSION_META, getSessionColor, getTodayScheduleInfo } from '../data/workoutPlan'
+import { SESSIONS, SESSION_META, FULL_ROTATION, getSessionColor, getTodayScheduleInfo } from '../data/workoutPlan'
 
-const SESSION_ORDER = ['A', 'B', 'C', 'D']
+const SESSION_ORDER = ['A', 'B', 'C', 'D', 'E']
 
 function getNextSession(history) {
-  if (!history.length) return 'A'
-  const last = history[history.length - 1].sessionKey
-  const idx = SESSION_ORDER.indexOf(last)
-  return SESSION_ORDER[(idx + 1) % SESSION_ORDER.length]
+  return FULL_ROTATION[history.length % FULL_ROTATION.length]
 }
 
 function getStreak(history) {
@@ -168,14 +165,19 @@ export default function Dashboard({ history, user, onStartWorkout, onNavigate, o
             </div>
 
             <div className="flex gap-2 mb-4 flex-wrap">
-              {nextSessionData.exercises.slice(0, 4).map(ex => (
-                <span key={ex.id} className="text-xs text-gray-400 bg-gray-800/80 px-2 py-1 rounded-lg">
-                  {ex.name.split(' ').slice(0, 2).join(' ')}
-                </span>
-              ))}
-              {nextSessionData.exercises.length > 4 && (
-                <span className="text-xs text-gray-500 px-2 py-1">+{nextSessionData.exercises.length - 4} more</span>
-              )}
+              {nextSessionData.isHomeSession
+                ? <span className="text-xs text-gray-400 bg-gray-800/80 px-2 py-1 rounded-lg">🏠 Home · Video workout</span>
+                : <>
+                    {nextSessionData.exercises.slice(0, 4).map(ex => (
+                      <span key={ex.id} className="text-xs text-gray-400 bg-gray-800/80 px-2 py-1 rounded-lg">
+                        {ex.name.split(' ').slice(0, 2).join(' ')}
+                      </span>
+                    ))}
+                    {nextSessionData.exercises.length > 4 && (
+                      <span className="text-xs text-gray-500 px-2 py-1">+{nextSessionData.exercises.length - 4} more</span>
+                    )}
+                  </>
+              }
             </div>
 
             <button
@@ -203,14 +205,16 @@ export default function Dashboard({ history, user, onStartWorkout, onNavigate, o
                 onClick={() => onStartWorkout(key)}
                 className={`p-4 rounded-2xl border text-left transition-colors active:opacity-80 ${
                   isNext ? `${c.border} ${c.light}` : 'border-gray-800 bg-gray-900/50'
-                }`}
+                } ${key === 'E' ? 'col-span-2' : ''}`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-lg">{s.emoji}</span>
                   <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${c.bg} text-white`}>{key}</span>
                 </div>
                 <p className="font-semibold text-white text-sm">{s.label}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{s.exercises.length} exercises</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {s.isHomeSession ? 'Home · Video workout' : `${s.exercises.length} exercises`}
+                </p>
               </button>
             )
           })}

@@ -1,13 +1,13 @@
-// Week A: Mon / Tue / Thu / Sat (4 sessions)
-// Week B: Mon / Wed / Fri / Sat (4 sessions)
-// Sessions rotate A → B → C → D → A ...
+// Rotation (8-session cycle): A → B → E → D → A → B → C → D → repeat
+// Week A: Mon / Tue / Thu / Sat  |  Week B: Mon / Wed / Fri / Sat
 // Duration: ~45-50 min, fasted 9-10am
 
 export const SESSION_META = {
-  A: { label: 'Push', color: 'orange', emoji: '💪', muscles: 'Chest · Shoulders · Triceps' },
-  B: { label: 'Pull', color: 'blue', emoji: '🦾', muscles: 'Back · Biceps · Rear Delts' },
-  C: { label: 'Legs', color: 'green', emoji: '🦵', muscles: 'Quads · Hamstrings · Calves' },
-  D: { label: 'Core + Cardio', color: 'purple', emoji: '🫀', muscles: 'Core · Cardiovascular' },
+  A: { label: 'Push',        color: 'orange', emoji: '💪', muscles: 'Chest · Shoulders · Triceps' },
+  B: { label: 'Pull',        color: 'blue',   emoji: '🦾', muscles: 'Back · Biceps · Rear Delts' },
+  C: { label: 'Legs',        color: 'green',  emoji: '🦵', muscles: 'Quads · Hamstrings · Calves' },
+  D: { label: 'Core — Gym',  color: 'purple', emoji: '🫀', muscles: 'Core · Anti-Rotation · Stability' },
+  E: { label: 'Core — Home', color: 'pink',   emoji: '🏠', muscles: 'Full Core · Cardio · Mobility' },
 }
 
 export const WEEKS = {
@@ -15,23 +15,23 @@ export const WEEKS = {
   B: { days: ['Monday', 'Wednesday', 'Friday', 'Saturday'], count: 4 },
 }
 
-// Week A reference: Monday 18 May 2026 (current week is Week A)
+// Week A reference: Monday 18 May 2026
 const WEEK_A_REF = new Date('2026-05-18T00:00:00')
 
-// Days of week that are workout days per week type (0=Sun … 6=Sat)
 export const WEEK_WORKOUT_DAYS = {
   A: [1, 2, 4, 6], // Mon, Tue, Thu, Sat
   B: [1, 3, 5, 6], // Mon, Wed, Fri, Sat
 }
 
+// 8-session rotation — index by history.length % 8
+export const FULL_ROTATION = ['A', 'B', 'E', 'D', 'A', 'B', 'C', 'D']
+
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-const DAY_SHORT  = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export function getCurrentWeekType() {
   const now = new Date()
   now.setHours(0, 0, 0, 0)
   const dow = now.getDay()
-  // Rewind to Monday of this week
   const monday = new Date(now)
   monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1))
   const weeksSinceRef = Math.round((monday - WEEK_A_REF) / (7 * 24 * 60 * 60 * 1000))
@@ -61,6 +61,7 @@ export function getTodayScheduleInfo() {
 }
 
 export const SESSIONS = {
+  // ─── SESSION A: PUSH ───────────────────────────────────────────────────────
   A: {
     ...SESSION_META.A,
     sessionKey: 'A',
@@ -68,54 +69,46 @@ export const SESSIONS = {
       {
         id: 'db-bench-press',
         name: 'Dumbbell Bench Press',
-        sets: 3,
-        reps: 10,
-        rest: 60,
+        sets: 3, reps: 10, rest: 60,
         muscles: ['Chest', 'Front Delt', 'Triceps'],
         cues: [
           'Retract and depress shoulder blades into bench',
           'Lower to chest level, elbows ~75° from body',
-          'Press in slight arc — converge at the top',
-          'Keep feet flat, maintain slight lower back arch',
+          'Press in a slight arc — dumbbells converge at the top',
+          'Keep feet flat, maintain a slight natural lower-back arch',
         ],
         videoSearch: 'dumbbell bench press proper form tutorial',
       },
       {
-        id: 'db-shoulder-press',
-        name: 'Dumbbell Shoulder Press',
-        sets: 3,
-        reps: 10,
-        rest: 60,
+        id: 'arnold-press',
+        name: 'Arnold Press',
+        sets: 3, reps: 10, rest: 60,
         muscles: ['Front Delt', 'Lateral Delt', 'Triceps'],
         cues: [
-          'Sit upright, dumbbells at ear level, palms forward',
-          'Press straight up without letting elbows flare forward',
-          'Stop just before full lockout to keep tension on delts',
-          'Control the descent — 2 seconds down',
+          'Start with dumbbells at chin height, palms facing you',
+          'As you press up, rotate palms forward — finish palms facing away',
+          'Lower slowly, rotating palms back toward you at the bottom',
+          'Sit upright with back fully supported — do not arch',
         ],
-        videoSearch: 'dumbbell shoulder press seated proper form',
+        videoSearch: 'arnold press proper form all three deltoid heads',
       },
       {
-        id: 'incline-db-press',
-        name: 'Incline Dumbbell Press',
-        sets: 3,
-        reps: 10,
-        rest: 60,
-        muscles: ['Upper Chest', 'Front Delt', 'Triceps'],
+        id: 'weighted-dips',
+        name: 'Weighted Dips',
+        sets: 3, reps: 10, rest: 60,
+        muscles: ['Chest', 'Triceps', 'Front Delt'],
         cues: [
-          'Set bench to 30–45° — steeper hits more shoulder',
-          'Lower to upper chest, not toward neck',
-          'Keep lower back in contact with the pad',
-          'Drive through palms, squeeze chest at the top',
+          'Lean torso slightly forward to bias chest over triceps',
+          'Lower until upper arms are parallel to the ground — no deeper',
+          'Elbows slightly flared (30–40°), not locked to sides',
+          'Add weight via belt or hold a dumbbell between your legs',
         ],
-        videoSearch: 'incline dumbbell press proper form upper chest',
+        videoSearch: 'weighted dips proper form chest triceps tutorial',
       },
       {
         id: 'lateral-raises',
         name: 'Lateral Raises',
-        sets: 3,
-        reps: 12,
-        rest: 60,
+        sets: 3, reps: 12, rest: 60,
         muscles: ['Lateral Delt'],
         cues: [
           'Slight bend in elbows throughout — soft lock',
@@ -126,23 +119,22 @@ export const SESSIONS = {
         videoSearch: 'lateral raises proper form side deltoid',
       },
       {
-        id: 'tricep-pushdowns',
-        name: 'Tricep Pushdowns',
-        sets: 3,
-        reps: 12,
-        rest: 60,
+        id: 'cable-overhead-tricep-extension',
+        name: 'Seated Cable Overhead Extension',
+        sets: 3, reps: 12, rest: 60,
         muscles: ['Triceps'],
         cues: [
-          'Keep elbows pinned to sides throughout the movement',
-          'Full extension at the bottom — brief pause',
-          'Control the upward phase — don\'t let the stack drop',
-          'Lean slightly forward at the cable for stability',
+          'Sit facing away from the cable with pulley at low/mid height',
+          'Grip the rope with both hands behind your head, elbows forward',
+          'Extend arms overhead until fully straight — don\'t flare elbows',
+          'Control the descent to feel the stretch in the long head',
         ],
-        videoSearch: 'cable tricep pushdown proper form tutorial',
+        videoSearch: 'seated cable overhead tricep extension rope long head',
       },
     ],
   },
 
+  // ─── SESSION B: PULL ───────────────────────────────────────────────────────
   B: {
     ...SESSION_META.B,
     sessionKey: 'B',
@@ -150,9 +142,7 @@ export const SESSIONS = {
       {
         id: 'lat-pulldown',
         name: 'Lat Pulldown',
-        sets: 3,
-        reps: 10,
-        rest: 60,
+        sets: 3, reps: 10, rest: 60,
         muscles: ['Lats', 'Biceps', 'Rear Delt'],
         cues: [
           'Grip slightly wider than shoulder width, overhand',
@@ -165,9 +155,7 @@ export const SESSIONS = {
       {
         id: 'seated-cable-row',
         name: 'Seated Cable Row',
-        sets: 3,
-        reps: 10,
-        rest: 60,
+        sets: 3, reps: 10, rest: 60,
         muscles: ['Mid Back', 'Lats', 'Biceps'],
         cues: [
           'Sit tall — don\'t round your lower back',
@@ -178,27 +166,22 @@ export const SESSIONS = {
         videoSearch: 'seated cable row proper form back tutorial',
       },
       {
-        id: 'single-arm-db-row',
-        name: 'Single Arm Dumbbell Row',
-        sets: 3,
-        reps: 10,
-        rest: 60,
-        muscles: ['Lats', 'Mid Back', 'Biceps'],
-        note: 'Each side',
+        id: 'chest-supported-db-row',
+        name: 'Chest-Supported DB Row',
+        sets: 3, reps: 10, rest: 60,
+        muscles: ['Mid Back', 'Lats', 'Rear Delt'],
         cues: [
-          'Support with free hand on bench, keep spine neutral',
-          'Pull elbow straight back — not out to the side',
-          'Full stretch at the bottom, full contraction at top',
-          'Think "elbow to hip pocket" to engage lats properly',
+          'Lie prone on an incline bench (30–45°) — chest fully on the pad',
+          'Let arms hang fully for a complete stretch at the bottom',
+          'Row elbows back and up, squeezing shoulder blades together',
+          'Lower back is completely uninvolved — all tension stays in the back',
         ],
-        videoSearch: 'single arm dumbbell row proper form tutorial',
+        videoSearch: 'chest supported dumbbell row proper form back tutorial',
       },
       {
         id: 'face-pulls',
         name: 'Face Pulls',
-        sets: 3,
-        reps: 15,
-        rest: 60,
+        sets: 3, reps: 15, rest: 60,
         muscles: ['Rear Delt', 'Rotator Cuff', 'Traps'],
         cues: [
           'Set cable at face height or slightly above',
@@ -209,69 +192,63 @@ export const SESSIONS = {
         videoSearch: 'face pulls proper form rear delt tutorial',
       },
       {
-        id: 'bicep-curls',
-        name: 'Dumbbell Bicep Curls',
-        sets: 3,
-        reps: 12,
-        rest: 60,
+        id: 'incline-db-curl',
+        name: 'Incline DB Curl',
+        sets: 3, reps: 12, rest: 60,
         muscles: ['Biceps', 'Brachialis'],
         cues: [
-          'Elbows stay pinned at sides — they are the hinge',
-          'Supinate wrist as you curl (rotate palm up at top)',
-          'Full range — achieve full extension at the bottom',
-          'If you\'re swinging, reduce the weight',
+          'Lie back on incline bench (45–60°), arms hanging straight down',
+          'The incline stretches the long head at the bottom — lean into that',
+          'Curl slowly, supinating the wrist at the top',
+          'Keep upper arms vertical throughout — don\'t let elbows drift forward',
         ],
-        videoSearch: 'dumbbell bicep curl proper form supination tutorial',
+        videoSearch: 'incline dumbbell curl bicep long head stretch tutorial',
       },
     ],
   },
 
+  // ─── SESSION C: LEGS ───────────────────────────────────────────────────────
   C: {
     ...SESSION_META.C,
     sessionKey: 'C',
     exercises: [
       {
-        id: 'leg-press',
-        name: 'Leg Press',
-        sets: 3,
-        reps: 12,
-        rest: 60,
+        id: 'bulgarian-split-squat',
+        name: 'Bulgarian Split Squat',
+        sets: 3, reps: 10, rest: 60,
         muscles: ['Quads', 'Glutes', 'Hamstrings'],
+        note: 'Each side',
         cues: [
-          'Feet hip-width apart, mid to upper portion of platform',
-          'Don\'t lock out knees at the top — keep slight bend',
-          'Lower until hips just begin to round — stop there',
-          'Push through whole foot evenly, not just the toes',
+          'Rear foot elevated on bench, front foot 2–3 feet forward',
+          'Lower straight down — front knee tracks over toes, don\'t cave in',
+          'Upright torso = more quads; lean forward slightly = more glutes',
+          'Brace core throughout — this protects your lower back',
         ],
-        videoSearch: 'leg press proper form tutorial feet position',
+        videoSearch: 'bulgarian split squat proper form quads glutes tutorial',
       },
       {
-        id: 'romanian-deadlift',
-        name: 'Romanian Deadlift',
-        sets: 3,
-        reps: 10,
-        rest: 60,
-        muscles: ['Hamstrings', 'Glutes', 'Lower Back'],
-        note: 'Dumbbells',
+        id: 'hip-thrust',
+        name: 'Hip Thrust',
+        sets: 3, reps: 12, rest: 60,
+        muscles: ['Glutes', 'Hamstrings'],
+        note: 'Barbell or plate — use a pad',
         cues: [
-          'Maintain a soft (not locked) knee throughout',
-          'Hinge at hips — push them backward as weights descend',
-          'Keep dumbbells close to your legs at all times',
-          'Feel the stretch in hamstrings — stop before lower back rounds',
+          'Upper back on bench, weight across hip crease (use a pad)',
+          'Drive hips up until body forms a straight line — knees to shoulders',
+          'Squeeze glutes hard at the top for 1 full second',
+          'Chin tucked, core braced — lower back should not arch at the top',
         ],
-        videoSearch: 'romanian deadlift dumbbell proper form tutorial hinge',
+        videoSearch: 'hip thrust proper form glutes barbell tutorial',
       },
       {
         id: 'leg-curls',
         name: 'Leg Curls',
-        sets: 3,
-        reps: 12,
-        rest: 60,
+        sets: 3, reps: 12, rest: 60,
         muscles: ['Hamstrings'],
         note: 'Machine',
         cues: [
           'Lie flat, pad positioned just above the heels',
-          'Squeeze glutes to stabilize pelvis — prevents hip flexor compensation',
+          'Squeeze glutes to stabilise pelvis — prevents hip flexor compensation',
           'Curl until hamstrings are fully contracted',
           'Lower slowly — 3 seconds on the way down',
         ],
@@ -280,9 +257,7 @@ export const SESSIONS = {
       {
         id: 'leg-extensions',
         name: 'Leg Extensions',
-        sets: 3,
-        reps: 12,
-        rest: 60,
+        sets: 3, reps: 12, rest: 60,
         muscles: ['Quads'],
         note: 'Machine',
         cues: [
@@ -296,9 +271,7 @@ export const SESSIONS = {
       {
         id: 'calf-raises',
         name: 'Calf Raises',
-        sets: 3,
-        reps: 15,
-        rest: 60,
+        sets: 3, reps: 15, rest: 60,
         muscles: ['Gastrocnemius', 'Soleus'],
         cues: [
           'Full range — all the way up AND all the way down',
@@ -311,34 +284,15 @@ export const SESSIONS = {
     ],
   },
 
+  // ─── SESSION D: CORE — GYM ─────────────────────────────────────────────────
   D: {
     ...SESSION_META.D,
     sessionKey: 'D',
     exercises: [
       {
-        id: 'incline-treadmill-walk',
-        name: 'Incline Treadmill Walk',
-        sets: 1,
-        reps: null,
-        duration: 20,
-        rest: 0,
-        isCardio: true,
-        muscles: ['Glutes', 'Calves', 'Cardiovascular'],
-        cues: [
-          'Set incline to 8–12%, speed 3.5–4.5 km/h',
-          'Don\'t hold onto the handles — use natural arm swing',
-          'Maintain upright posture with a slight forward lean',
-          'Steady Zone 2 heart rate — you can hold a conversation',
-        ],
-        videoSearch: 'incline treadmill walking technique fat loss',
-      },
-      {
         id: 'plank',
         name: 'Plank',
-        sets: 3,
-        reps: null,
-        duration: 45,
-        rest: 60,
+        sets: 3, reps: null, duration: 45, rest: 60,
         isTime: true,
         muscles: ['Core', 'Transverse Abdominis'],
         cues: [
@@ -352,9 +306,7 @@ export const SESSIONS = {
       {
         id: 'dead-bug',
         name: 'Dead Bug',
-        sets: 3,
-        reps: 10,
-        rest: 60,
+        sets: 3, reps: 10, rest: 60,
         muscles: ['Core', 'Transverse Abdominis'],
         note: 'Each side',
         cues: [
@@ -368,9 +320,7 @@ export const SESSIONS = {
       {
         id: 'bird-dog',
         name: 'Bird Dog',
-        sets: 3,
-        reps: 10,
-        rest: 60,
+        sets: 3, reps: 10, rest: 60,
         muscles: ['Core', 'Glutes', 'Lower Back'],
         note: 'Each side',
         cues: [
@@ -384,10 +334,9 @@ export const SESSIONS = {
       {
         id: 'pallof-press',
         name: 'Pallof Press',
-        sets: 3,
-        reps: 12,
-        rest: 60,
+        sets: 3, reps: 12, rest: 60,
         muscles: ['Core', 'Obliques', 'Transverse Abdominis'],
+        note: 'Each side',
         cues: [
           'Stand perpendicular to cable, feet hip-width apart',
           'Hold handle at chest, then press straight out in front',
@@ -397,21 +346,29 @@ export const SESSIONS = {
         videoSearch: 'pallof press anti rotation core cable tutorial',
       },
       {
-        id: 'reverse-crunches',
-        name: 'Reverse Crunches',
-        sets: 3,
-        reps: 15,
-        rest: 60,
-        muscles: ['Lower Abs', 'Core'],
+        id: 'cable-woodchops',
+        name: 'Cable Woodchops',
+        sets: 3, reps: 12, rest: 60,
+        muscles: ['Obliques', 'Core'],
+        note: 'Each side',
         cues: [
-          'Lie flat, hands under lower back for support if needed',
-          'Curl hips up and toward your chest — not just legs',
-          'Control the descent — don\'t let legs drop',
-          'Exhale as you lift, inhale as you lower',
+          'Stand side-on to the cable set at shoulder height',
+          'Pull the handle diagonally down and across your body',
+          'Rotation comes from the trunk — don\'t just use your arms',
+          'Control the return; brace core throughout',
         ],
-        videoSearch: 'reverse crunches proper form lower abs tutorial',
+        videoSearch: 'cable woodchops obliques core rotation tutorial',
       },
     ],
+  },
+
+  // ─── SESSION E: CORE — HOME ────────────────────────────────────────────────
+  E: {
+    ...SESSION_META.E,
+    sessionKey: 'E',
+    isHomeSession: true,
+    videoUrl: 'https://youtu.be/k3aFE02BdLE?si=VtE8eolv3hOxreGa',
+    exercises: [],
   },
 }
 
@@ -424,9 +381,10 @@ export function getYouTubeSearchUrl(searchQuery) {
 export function getSessionColor(sessionKey) {
   const colors = {
     A: { bg: 'bg-orange-500', text: 'text-orange-400', border: 'border-orange-500/30', light: 'bg-orange-500/10' },
-    B: { bg: 'bg-blue-500', text: 'text-blue-400', border: 'border-blue-500/30', light: 'bg-blue-500/10' },
-    C: { bg: 'bg-green-500', text: 'text-green-400', border: 'border-green-500/30', light: 'bg-green-500/10' },
+    B: { bg: 'bg-blue-500',   text: 'text-blue-400',   border: 'border-blue-500/30',   light: 'bg-blue-500/10'   },
+    C: { bg: 'bg-green-500',  text: 'text-green-400',  border: 'border-green-500/30',  light: 'bg-green-500/10'  },
     D: { bg: 'bg-purple-500', text: 'text-purple-400', border: 'border-purple-500/30', light: 'bg-purple-500/10' },
+    E: { bg: 'bg-pink-500',   text: 'text-pink-400',   border: 'border-pink-500/30',   light: 'bg-pink-500/10'   },
   }
   return colors[sessionKey] || colors.A
 }

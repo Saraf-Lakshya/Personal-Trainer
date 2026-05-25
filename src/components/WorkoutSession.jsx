@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ArrowLeft, CheckCircle, Timer, Zap, Plus, Pencil, X, RotateCcw } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Timer, Zap, Plus, Pencil, X, RotateCcw, ExternalLink } from 'lucide-react'
 import { SESSIONS, getSessionColor } from '../data/workoutPlan'
 import ExerciseCard from './ExerciseCard'
 import RestTimer from './RestTimer'
@@ -26,7 +26,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
   const session = SESSIONS[sessionKey]
   const colors = getSessionColor(sessionKey)
 
-  const [phase, setPhase] = useState('warmup')
+  const [phase, setPhase] = useState(() => session.isHomeSession ? 'workout' : 'warmup')
 
   const [exercises, setExercises] = useState(() => session.exercises)
   const [exerciseStates, setExerciseStates] = useState(() =>
@@ -172,14 +172,20 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
       date: new Date().toISOString(),
       sessionKey,
       durationSeconds: elapsed,
-      exercises: exercises.map((ex, i) => ({
-        exerciseId: ex.id,
-        exerciseName: ex.name,
-        sets: exerciseStates[i].sets,
-      })),
+      exercises: session.isHomeSession
+        ? []
+        : exercises.map((ex, i) => ({
+            exerciseId: ex.id,
+            exerciseName: ex.name,
+            sets: exerciseStates[i].sets,
+          })),
     }
-    setCooldownRecord(record)
-    setPhase('cooldown')
+    if (session.isHomeSession) {
+      onComplete(record)
+    } else {
+      setCooldownRecord(record)
+      setPhase('cooldown')
+    }
   }
 
   const handleCooldownDone = () => {
@@ -228,7 +234,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
           )}
         </div>
 
-        {phase === 'workout' && (
+        {phase === 'workout' && !session.isHomeSession && (
           <>
             <div className="h-1 mx-4 mb-3 bg-gray-800 rounded-full overflow-hidden">
               <div
@@ -248,7 +254,41 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
         <WarmupCooldown phase="warmup" onDone={() => setPhase('workout')} />
       )}
 
-      {phase === 'workout' && (
+      {phase === 'workout' && session.isHomeSession && (
+        <div className="flex-1 flex flex-col items-center justify-center gap-10 px-8 pb-20">
+          <div className="text-center">
+            <span className="text-6xl">{session.emoji}</span>
+            <p className="text-gray-400 text-sm mt-4">Follow along with today's video</p>
+            <p className="text-2xl font-bold text-white mt-1">{session.label}</p>
+          </div>
+
+          <a
+            href={session.videoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-red-600 text-white font-bold text-lg active:bg-red-700 shadow-lg shadow-red-600/25"
+          >
+            <ExternalLink size={20} />
+            Open on YouTube
+          </a>
+
+          <div className="flex flex-col items-center gap-1 text-gray-500">
+            <Timer size={16} />
+            <span className="font-mono text-3xl text-white mt-1">{formatElapsed(elapsed)}</span>
+            <p className="text-xs text-gray-600">elapsed</p>
+          </div>
+
+          <button
+            onClick={handleFinish}
+            className="w-full py-4 rounded-2xl bg-green-500 text-white font-bold text-base flex items-center justify-center gap-2 active:bg-green-600 shadow-lg shadow-green-500/25"
+          >
+            <CheckCircle size={20} />
+            Mark as Done
+          </button>
+        </div>
+      )}
+
+      {phase === 'workout' && !session.isHomeSession && (
         <>
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-36">
             {exercises.map((ex, i) => (

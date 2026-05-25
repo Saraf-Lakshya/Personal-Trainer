@@ -1,13 +1,10 @@
 import { Play, Zap } from 'lucide-react'
-import { SESSIONS, getSessionColor, getTodayScheduleInfo } from '../data/workoutPlan'
+import { SESSIONS, FULL_ROTATION, getSessionColor, getTodayScheduleInfo } from '../data/workoutPlan'
 
-const SESSION_ORDER = ['A', 'B', 'C', 'D']
+const SESSION_ORDER = ['A', 'B', 'C', 'D', 'E']
 
 function getNextSession(history) {
-  if (!history.length) return 'A'
-  const last = history[history.length - 1].sessionKey
-  const idx = SESSION_ORDER.indexOf(last)
-  return SESSION_ORDER[(idx + 1) % SESSION_ORDER.length]
+  return FULL_ROTATION[history.length % FULL_ROTATION.length]
 }
 
 export default function SessionPicker({ history, onStartWorkout }) {
@@ -70,14 +67,19 @@ export default function SessionPicker({ history, onStartWorkout }) {
               </div>
 
               <div className="flex gap-1.5 mt-3 flex-wrap">
-                {s.exercises.slice(0, 4).map(ex => (
-                  <span key={ex.id} className="text-xs text-gray-500 bg-gray-800/80 px-2 py-0.5 rounded-full">
-                    {ex.name.split(' ').slice(0, 2).join(' ')}
-                  </span>
-                ))}
-                {s.exercises.length > 4 && (
-                  <span className="text-xs text-gray-600 px-2 py-0.5">+{s.exercises.length - 4}</span>
-                )}
+                {s.isHomeSession
+                  ? <span className="text-xs text-gray-500 bg-gray-800/80 px-2 py-0.5 rounded-full">🏠 Video workout · Mark done</span>
+                  : <>
+                      {s.exercises.slice(0, 4).map(ex => (
+                        <span key={ex.id} className="text-xs text-gray-500 bg-gray-800/80 px-2 py-0.5 rounded-full">
+                          {ex.name.split(' ').slice(0, 2).join(' ')}
+                        </span>
+                      ))}
+                      {s.exercises.length > 4 && (
+                        <span className="text-xs text-gray-600 px-2 py-0.5">+{s.exercises.length - 4}</span>
+                      )}
+                    </>
+                }
               </div>
             </button>
           )
