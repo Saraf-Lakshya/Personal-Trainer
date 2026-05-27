@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Play, Calendar, Flame, TrendingUp, Dumbbell } from 'lucide-react'
+import { Calendar, Flame, TrendingUp, Dumbbell } from 'lucide-react'
 import { SESSIONS, SESSION_META, FULL_ROTATION, getSessionColor, getTodayScheduleInfo } from '../data/workoutPlan'
 
 const SESSION_ORDER = ['A', 'B', 'C', 'D', 'E']
@@ -55,8 +55,6 @@ export default function Dashboard({ history, user, onStartWorkout, onNavigate, o
   const { weekType, todayName } = getTodayScheduleInfo()
   const streak = getStreak(history)
   const recentSessions = [...history].reverse().slice(0, 4)
-  const nextSessionData = SESSIONS[nextSession]
-  const nextColors = getSessionColor(nextSession)
 
   const weekSessions = (() => {
     const weekStart = new Date()
@@ -141,50 +139,6 @@ export default function Dashboard({ history, user, onStartWorkout, onNavigate, o
         />
       </div>
 
-      {/* Next workout card */}
-      <div className="px-5 mb-6">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Next Up</p>
-        <div className={`rounded-2xl border ${nextColors.border} bg-gradient-to-br from-gray-900 to-gray-800 overflow-hidden`}>
-          <div className="p-5">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${nextColors.bg} text-white`}>
-                    Session {nextSession}
-                  </span>
-                </div>
-                <h2 className="text-2xl font-bold text-white">{nextSessionData.label}</h2>
-                <p className="text-gray-400 text-sm mt-1">{nextSessionData.muscles}</p>
-              </div>
-              <span className="text-4xl">{nextSessionData.emoji}</span>
-            </div>
-
-            <div className="flex gap-2 mb-4 flex-wrap">
-              {nextSessionData.isHomeSession
-                ? <span className="text-xs text-gray-400 bg-gray-800/80 px-2 py-1 rounded-lg">🏠 Home · Video workout</span>
-                : <>
-                    {nextSessionData.exercises.slice(0, 4).map(ex => (
-                      <span key={ex.id} className="text-xs text-gray-400 bg-gray-800/80 px-2 py-1 rounded-lg">
-                        {ex.name.split(' ').slice(0, 2).join(' ')}
-                      </span>
-                    ))}
-                    {nextSessionData.exercises.length > 4 && (
-                      <span className="text-xs text-gray-500 px-2 py-1">+{nextSessionData.exercises.length - 4} more</span>
-                    )}
-                  </>
-              }
-            </div>
-
-            <button
-              onClick={() => onStartWorkout(nextSession)}
-              className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white text-base ${nextColors.bg} active:opacity-80 transition-opacity`}
-            >
-              <Play size={18} fill="white" />
-              Start Session {nextSession}
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* All sessions quick-pick */}
       <div className="px-5 mb-6">
