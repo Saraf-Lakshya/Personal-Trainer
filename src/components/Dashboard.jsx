@@ -52,7 +52,7 @@ function formatDate(isoStr) {
 export default function Dashboard({ history, user, onStartWorkout, onNavigate, onSignOut, onChangePassword }) {
   const [showMenu, setShowMenu] = useState(false)
   const nextSession = getNextSession(history)
-  const { weekType, isWorkout, todayName, nextWorkoutDay } = getTodayScheduleInfo()
+  const { weekType, todayName } = getTodayScheduleInfo()
   const streak = getStreak(history)
   const recentSessions = [...history].reverse().slice(0, 4)
   const nextSessionData = SESSIONS[nextSession]
@@ -115,12 +115,7 @@ export default function Dashboard({ history, user, onStartWorkout, onNavigate, o
             </div>
           </div>
         </div>
-        <div className="mt-2">
-          {isWorkout
-            ? <p className="text-sm text-orange-400 font-medium">Workout day 🔥 — {nextSessionData.label} up next</p>
-            : <p className="text-sm text-gray-500">Rest day{nextWorkoutDay ? ` · Next workout: ${nextWorkoutDay}` : ''}</p>
-          }
-        </div>
+        <p className="text-sm text-gray-500 mt-2">What are we doing today?</p>
       </div>
 
       {/* Stats row */}

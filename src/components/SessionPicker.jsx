@@ -8,23 +8,16 @@ function getNextSession(history) {
 }
 
 export default function SessionPicker({ history, onStartWorkout }) {
-  const { weekType, isWorkout, todayName } = getTodayScheduleInfo()
+  const { weekType } = getTodayScheduleInfo()
   const nextSession = getNextSession(history)
 
   return (
     <div className="min-h-screen bg-gray-950">
       <div className="px-5 pt-12 pb-4">
-        <p className="text-gray-500 text-sm">{todayName}</p>
-        <h1 className="text-2xl font-bold text-white mt-1">Start Workout</h1>
-        <div className="flex items-center gap-2 mt-2">
-          <span className="text-xs font-semibold bg-gray-800 text-gray-300 px-2.5 py-1 rounded-full border border-gray-700">
-            Week {weekType}
-          </span>
-          {isWorkout
-            ? <span className="text-xs text-orange-400 font-medium">Workout day 🔥</span>
-            : <span className="text-xs text-gray-500">Rest day — but you can still train</span>
-          }
-        </div>
+        <h1 className="text-2xl font-bold text-white">What are we doing today?</h1>
+        <span className="inline-block text-xs font-semibold bg-gray-800 text-gray-300 px-2.5 py-1 rounded-full border border-gray-700 mt-2">
+          Week {weekType}
+        </span>
       </div>
 
       <div className="px-4 pb-32 space-y-3">
