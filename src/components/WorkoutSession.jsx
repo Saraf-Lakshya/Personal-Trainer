@@ -42,6 +42,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
   const [newExSets, setNewExSets] = useState(3)
   const [newExReps, setNewExReps] = useState(10)
   const [cooldownRecord, setCooldownRecord] = useState(null)
+  const cooldownRecordRef = useRef(null)
 
   // Undo toast state
   const [pendingUndo, setPendingUndo] = useState(null) // { label, onUndo }
@@ -183,13 +184,14 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
     if (session.isHomeSession) {
       onComplete(record)
     } else {
-      setCooldownRecord(record)
+      cooldownRecordRef.current = record   // ref: never stale
+      setCooldownRecord(record)            // state: drives UI (save error banner)
       setPhase('cooldown')
     }
   }
 
   const handleCooldownDone = () => {
-    onComplete(cooldownRecord)
+    onComplete(cooldownRecordRef.current)
   }
 
   const formatElapsed = (secs) => {
@@ -203,7 +205,10 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
       {/* Header */}
       <div className="sticky top-0 z-30 bg-gray-950/95 backdrop-blur border-b border-gray-800">
         <div className="flex items-center gap-3 px-4 pt-4 pb-3">
-          <button onClick={onCancel} className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-800 active:bg-gray-700">
+          <button
+            onClick={phase === 'cooldown' ? handleCooldownDone : onCancel}
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-800 active:bg-gray-700"
+          >
             <ArrowLeft size={18} className="text-gray-400" />
           </button>
           <div className="flex-1">
