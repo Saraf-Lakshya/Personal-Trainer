@@ -22,7 +22,7 @@ function buildInitialSets(exercise, prevSets) {
   }))
 }
 
-export default function WorkoutSession({ sessionKey, history, onComplete, onCancel }) {
+export default function WorkoutSession({ sessionKey, history, onComplete, onCancel, saveError, onRetrySave }) {
   const session = SESSIONS[sessionKey]
   const colors = getSessionColor(sessionKey)
 
@@ -399,6 +399,21 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
           onDone={() => setRestTimer(null)}
           onSkip={() => setRestTimer(null)}
         />
+      )}
+
+      {saveError && (
+        <div className="fixed inset-x-4 bottom-24 z-50 bg-red-950 border border-red-500/40 rounded-2xl px-4 py-3 flex items-center justify-between shadow-xl">
+          <div>
+            <p className="text-white text-sm font-semibold">Save failed</p>
+            <p className="text-red-400 text-xs mt-0.5">Check your connection and retry</p>
+          </div>
+          <button
+            onClick={onRetrySave}
+            className="ml-4 px-4 py-2 rounded-xl bg-orange-500 text-white text-sm font-bold active:bg-orange-600 flex-shrink-0"
+          >
+            Retry
+          </button>
+        </div>
       )}
     </div>
   )

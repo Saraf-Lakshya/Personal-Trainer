@@ -28,6 +28,7 @@ export default function App() {
   const [view, setView] = useState('dashboard')
   const [activeSessionKey, setActiveSessionKey] = useState(null)
   const [changingPassword, setChangingPassword] = useState(false)
+  const [failedRecord, setFailedRecord] = useState(null)
 
   // Still resolving auth state
   if (user === undefined) return <LoadingScreen />
@@ -49,9 +50,16 @@ export default function App() {
   }
 
   const handleCompleteWorkout = async (record) => {
-    await addSession(record)
-    setActiveSessionKey(null)
-    setView('dashboard')
+    try {
+      await addSession(record)
+      setFailedRecord(null)
+      setActiveSessionKey(null)
+      setView('dashboard')
+    } catch (err) {
+      console.error('Failed to save session:', err)
+      setFailedRecord(record)
+      // Stay on workout screen so the user can retry — don't lose their data
+    }
   }
 
   const handleCancelWorkout = () => {
@@ -75,6 +83,8 @@ export default function App() {
           history={sessions}
           onComplete={handleCompleteWorkout}
           onCancel={handleCancelWorkout}
+          saveError={!!failedRecord}
+          onRetrySave={failedRecord ? () => handleCompleteWorkout(failedRecord) : null}
         />
       ) : (
         <>

@@ -46,7 +46,8 @@ export function useWorkoutData(userId) {
       .insert(toDb(record, userId))
       .select()
       .single()
-    if (!error && data) setSessions(prev => [...prev, fromDb(data)])
+    if (error) throw error
+    setSessions(prev => [...prev, fromDb(data)])
   }, [userId])
 
   const deleteSession = useCallback(async (id) => {
