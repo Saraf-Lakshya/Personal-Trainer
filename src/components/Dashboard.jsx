@@ -1,12 +1,8 @@
 import { useState } from 'react'
 import { Calendar, Flame, TrendingUp, Dumbbell } from 'lucide-react'
-import { SESSIONS, SESSION_META, FULL_ROTATION, getSessionColor, getTodayScheduleInfo } from '../data/workoutPlan'
+import { SESSIONS, SESSION_META, getSessionColor, getTodayScheduleInfo } from '../data/workoutPlan'
 
 const SESSION_ORDER = ['A', 'B', 'C', 'D', 'E']
-
-function getNextSession(history) {
-  return FULL_ROTATION[history.length % FULL_ROTATION.length]
-}
 
 function getStreak(history) {
   if (!history.length) return 0
@@ -51,7 +47,6 @@ function formatDate(isoStr) {
 
 export default function Dashboard({ history, user, onStartWorkout, onNavigate, onSignOut, onChangePassword }) {
   const [showMenu, setShowMenu] = useState(false)
-  const nextSession = getNextSession(history)
   const { weekType, todayName } = getTodayScheduleInfo()
   const streak = getStreak(history)
   const recentSessions = [...history].reverse().slice(0, 4)
@@ -147,14 +142,11 @@ export default function Dashboard({ history, user, onStartWorkout, onNavigate, o
           {SESSION_ORDER.map(key => {
             const s = SESSIONS[key]
             const c = getSessionColor(key)
-            const isNext = key === nextSession
             return (
               <button
                 key={key}
                 onClick={() => onStartWorkout(key)}
-                className={`p-4 rounded-2xl border text-left transition-colors active:opacity-80 ${
-                  isNext ? `${c.border} ${c.light}` : 'border-gray-800 bg-gray-900/50'
-                } ${key === 'E' ? 'col-span-2' : ''}`}
+                className={`p-4 rounded-2xl border border-gray-800 bg-gray-900/50 text-left transition-colors active:opacity-80 ${key === 'E' ? 'col-span-2' : ''}`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-lg">{s.emoji}</span>

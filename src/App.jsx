@@ -50,15 +50,18 @@ export default function App() {
   }
 
   const handleCompleteWorkout = async (record) => {
-    try {
-      await addSession(record)
-      setFailedRecord(null)
-      setActiveSessionKey(null)
-      setView('dashboard')
-    } catch (err) {
-      console.error('Failed to save session:', err)
-      setFailedRecord(record)
-      // Stay on workout screen so the user can retry — don't lose their data
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        if (attempt > 0) await new Promise(r => setTimeout(r, 1000 * attempt))
+        await addSession(record)
+        setFailedRecord(null)
+        setActiveSessionKey(null)
+        setView('dashboard')
+        return
+      } catch (err) {
+        console.error(`Save attempt ${attempt + 1} failed:`, err)
+        if (attempt === 2) setFailedRecord(record)
+      }
     }
   }
 

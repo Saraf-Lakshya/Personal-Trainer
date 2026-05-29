@@ -1,15 +1,10 @@
-import { Play, Zap } from 'lucide-react'
-import { SESSIONS, FULL_ROTATION, getSessionColor, getTodayScheduleInfo } from '../data/workoutPlan'
+import { Play } from 'lucide-react'
+import { SESSIONS, getSessionColor, getTodayScheduleInfo } from '../data/workoutPlan'
 
 const SESSION_ORDER = ['A', 'B', 'C', 'D', 'E']
 
-function getNextSession(history) {
-  return FULL_ROTATION[history.length % FULL_ROTATION.length]
-}
-
 export default function SessionPicker({ history, onStartWorkout }) {
   const { weekType } = getTodayScheduleInfo()
-  const nextSession = getNextSession(history)
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -24,17 +19,12 @@ export default function SessionPicker({ history, onStartWorkout }) {
         {SESSION_ORDER.map(key => {
           const s = SESSIONS[key]
           const c = getSessionColor(key)
-          const isNext = key === nextSession
 
           return (
             <button
               key={key}
               onClick={() => onStartWorkout(key)}
-              className={`w-full p-5 rounded-2xl border text-left transition-colors active:opacity-80 ${
-                isNext
-                  ? `${c.border} ${c.light} border-2`
-                  : 'border-gray-800 bg-gray-900/50'
-              }`}
+              className="w-full p-5 rounded-2xl border border-gray-800 bg-gray-900/50 text-left transition-colors active:opacity-80"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -44,17 +34,12 @@ export default function SessionPicker({ history, onStartWorkout }) {
                       <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${c.bg} text-white`}>
                         Session {key}
                       </span>
-                      {isNext && (
-                        <span className="text-xs text-orange-400 font-medium">Up next</span>
-                      )}
                     </div>
                     <p className="font-bold text-white text-lg mt-0.5">{s.label}</p>
                     <p className="text-xs text-gray-500 mt-0.5">{s.muscles}</p>
                   </div>
                 </div>
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                  isNext ? `${c.bg}` : 'bg-gray-800'
-                }`}>
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-gray-800">
                   <Play size={18} fill="white" className="text-white ml-0.5" />
                 </div>
               </div>
