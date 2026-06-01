@@ -206,7 +206,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
       <div className="sticky top-0 z-30 bg-gray-950/95 backdrop-blur border-b border-gray-800">
         <div className="flex items-center gap-3 px-4 pt-4 pb-3">
           <button
-            onClick={phase === 'cooldown' ? handleCooldownDone : onCancel}
+            onClick={phase === 'cooldown' ? () => { cooldownRecordRef.current = null; setCooldownRecord(null); setPhase('workout') } : onCancel}
             className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-800 active:bg-gray-700"
           >
             <ArrowLeft size={18} className="text-gray-400" />
