@@ -28,7 +28,9 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
 
   const [phase, setPhase] = useState(() => session.isHomeSession ? 'workout' : 'warmup')
 
-  const [exercises, setExercises] = useState(() => session.exercises)
+  const [exercises, setExercises] = useState(() =>
+    session.exercises.map(ex => ({ ...ex, uid: crypto.randomUUID() }))
+  )
   const [exerciseStates, setExerciseStates] = useState(() =>
     session.exercises.map(ex => ({
       sets: buildInitialSets(ex, getPrevSets(ex.id, sessionKey, history)),
@@ -133,6 +135,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
     if (!newExName.trim()) return
     const newEx = {
       id: `custom-${Date.now()}`,
+      uid: crypto.randomUUID(),
       name: newExName.trim(),
       sets: newExSets,
       reps: newExReps,
@@ -153,11 +156,24 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
     })
   }
 
+  // When an exercise is chosen from `source`'s dropdown, give the chosen exercise
+  // its own dropdown: the original (stripped of nesting) plus the remaining siblings,
+  // so the user can keep swapping — or swap back — without needing the undo toast.
+  const buildSwapAlternatives = (source, chosen) => {
+    const { alternatives: srcAlts = [], uid, ...srcBase } = source
+    return [srcBase, ...srcAlts.filter(a => a.id !== chosen.id)]
+  }
+
   const handleSwapExercise = (idx, newExercise) => {
     const oldExercise = exercises[idx]
     const oldState = exerciseStates[idx]
-    const newState = { sets: buildInitialSets(newExercise, getPrevSets(newExercise.id, sessionKey, history)) }
-    setExercises(prev => prev.map((ex, i) => i === idx ? newExercise : ex))
+    const swapped = {
+      ...newExercise,
+      uid: crypto.randomUUID(),
+      alternatives: buildSwapAlternatives(oldExercise, newExercise),
+    }
+    const newState = { sets: buildInitialSets(swapped, getPrevSets(swapped.id, sessionKey, history)) }
+    setExercises(prev => prev.map((ex, i) => i === idx ? swapped : ex))
     setExerciseStates(prev => prev.map((es, i) => i === idx ? newState : es))
     triggerUndo(`Swapped to "${newExercise.name}"`, () => {
       setExercises(prev => prev.map((ex, i) => i === idx ? oldExercise : ex))
@@ -166,8 +182,14 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
   }
 
   const handleAddAfter = (idx, newExercise) => {
-    const newState = { sets: buildInitialSets(newExercise, getPrevSets(newExercise.id, sessionKey, history)) }
-    setExercises(prev => [...prev.slice(0, idx + 1), newExercise, ...prev.slice(idx + 1)])
+    const source = exercises[idx]
+    const added = {
+      ...newExercise,
+      uid: crypto.randomUUID(),
+      alternatives: buildSwapAlternatives(source, newExercise),
+    }
+    const newState = { sets: buildInitialSets(added, getPrevSets(added.id, sessionKey, history)) }
+    setExercises(prev => [...prev.slice(0, idx + 1), added, ...prev.slice(idx + 1)])
     setExerciseStates(prev => [...prev.slice(0, idx + 1), newState, ...prev.slice(idx + 1)])
     triggerUndo(`Added "${newExercise.name}"`, () => {
       setExercises(prev => prev.filter((_, i) => i !== idx + 1))
@@ -320,7 +342,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-36">
             {exercises.map((ex, i) => (
               <ExerciseCard
-                key={ex.id}
+                key={ex.uid}
                 exercise={ex}
                 prevSets={getPrevSets(ex.id, sessionKey, history)}
                 currentSets={exerciseStates[i].sets}
