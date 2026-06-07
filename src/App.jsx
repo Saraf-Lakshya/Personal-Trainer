@@ -21,9 +21,30 @@ function LoadingScreen() {
   )
 }
 
+function ErrorScreen({ onRetry, onSignOut }) {
+  return (
+    <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center gap-5 px-8 text-center">
+      <div className="text-5xl">📡</div>
+      <div>
+        <p className="text-white font-semibold">Couldn't load your workouts</p>
+        <p className="text-gray-500 text-sm mt-1">Check your connection and try again — your data is safe.</p>
+      </div>
+      <button
+        onClick={onRetry}
+        className="px-6 py-3 rounded-2xl bg-orange-500 text-white font-bold active:bg-orange-600"
+      >
+        Retry
+      </button>
+      <button onClick={onSignOut} className="text-gray-600 text-sm active:text-gray-400">
+        Sign out
+      </button>
+    </div>
+  )
+}
+
 export default function App() {
   const { user, recoveryMode, signOut } = useAuth()
-  const { sessions, loading, addSession, deleteSession } = useWorkoutData(user?.id)
+  const { sessions, loading, loadError, addSession, deleteSession, refetch } = useWorkoutData(user?.id)
 
   const [view, setView] = useState('dashboard')
   const [activeSessionKey, setActiveSessionKey] = useState(null)
@@ -43,6 +64,9 @@ export default function App() {
 
   // Signed in but data loading
   if (loading) return <LoadingScreen />
+
+  // Data failed to load after retries
+  if (loadError) return <ErrorScreen onRetry={refetch} onSignOut={signOut} />
 
   const handleStartWorkout = (sessionKey) => {
     setActiveSessionKey(sessionKey)

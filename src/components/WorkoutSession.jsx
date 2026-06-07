@@ -45,6 +45,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
   const [newExReps, setNewExReps] = useState(10)
   const [cooldownRecord, setCooldownRecord] = useState(null)
   const cooldownRecordRef = useRef(null)
+  const [confirmExit, setConfirmExit] = useState(false)
 
   // Undo toast state
   const [pendingUndo, setPendingUndo] = useState(null) // { label, onUndo }
@@ -250,7 +251,13 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
       <div className="sticky top-0 z-30 bg-gray-950/95 backdrop-blur border-b border-gray-800">
         <div className="flex items-center gap-3 px-4 pt-4 pb-3">
           <button
-            onClick={phase === 'cooldown' ? () => { cooldownRecordRef.current = null; setCooldownRecord(null); setPhase('workout') } : onCancel}
+            onClick={
+              phase === 'cooldown'
+                ? () => { cooldownRecordRef.current = null; setCooldownRecord(null); setPhase('workout') }
+                : (phase === 'workout' && completedSets > 0)
+                  ? () => setConfirmExit(true)
+                  : onCancel
+            }
             className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-800 active:bg-gray-700"
           >
             <ArrowLeft size={18} className="text-gray-400" />
@@ -450,6 +457,31 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
           onDone={() => setRestTimer(null)}
           onSkip={() => setRestTimer(null)}
         />
+      )}
+
+      {confirmExit && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-950/80 backdrop-blur-sm px-8 animate-fade-in">
+          <div className="w-full max-w-xs bg-gray-900 border border-gray-700 rounded-2xl p-5 shadow-2xl">
+            <p className="text-white font-semibold text-center">Leave this workout?</p>
+            <p className="text-gray-400 text-sm text-center mt-1">
+              You've logged {completedSets} {completedSets === 1 ? 'set' : 'sets'}. They won't be saved if you leave now.
+            </p>
+            <div className="flex gap-2 mt-5">
+              <button
+                onClick={() => setConfirmExit(false)}
+                className="flex-1 py-3 rounded-xl bg-gray-800 text-gray-200 font-semibold text-sm active:bg-gray-700"
+              >
+                Keep training
+              </button>
+              <button
+                onClick={() => { setConfirmExit(false); onCancel() }}
+                className="flex-1 py-3 rounded-xl bg-red-500/15 text-red-400 font-semibold text-sm active:bg-red-500/25"
+              >
+                Discard
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {saveError && (

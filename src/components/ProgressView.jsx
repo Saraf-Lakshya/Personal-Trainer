@@ -4,7 +4,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell,
 } from 'recharts'
-import { ALL_EXERCISES, SESSION_META, getSessionColor } from '../data/workoutPlan'
+import { ALL_TRACKABLE_EXERCISES } from '../data/workoutPlan'
 
 function shortDate(isoStr) {
   const d = new Date(isoStr)
@@ -79,7 +79,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function ProgressView({ history }) {
-  const trackableExercises = ALL_EXERCISES.filter(ex => !ex.isCardio)
+  const trackableExercises = ALL_TRACKABLE_EXERCISES.filter(ex => !ex.isCardio)
   const [selectedExercise, setSelectedExercise] = useState(trackableExercises[0]?.id ?? '')
   const [metric, setMetric] = useState('maxWeight')
   const [showPicker, setShowPicker] = useState(false)

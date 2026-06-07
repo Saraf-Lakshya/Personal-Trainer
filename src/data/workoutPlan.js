@@ -902,6 +902,22 @@ export const SESSIONS = {
 
 export const ALL_EXERCISES = Object.values(SESSIONS).flatMap(s => s.exercises)
 
+// Every exercise that can appear in a session — base exercises plus their
+// alternatives — deduped by id. Used by the progress tracker so swapped-in or
+// added alternatives are selectable too.
+export const ALL_TRACKABLE_EXERCISES = (() => {
+  const seen = new Map()
+  for (const s of Object.values(SESSIONS)) {
+    for (const ex of s.exercises) {
+      if (!seen.has(ex.id)) seen.set(ex.id, ex)
+      for (const alt of ex.alternatives ?? []) {
+        if (!seen.has(alt.id)) seen.set(alt.id, alt)
+      }
+    }
+  }
+  return [...seen.values()]
+})()
+
 export function getYouTubeSearchUrl(searchQuery) {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`
 }

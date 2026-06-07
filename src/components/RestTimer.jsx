@@ -1,14 +1,18 @@
-import { useEffect } from 'react'
-import { X, SkipForward, Plus } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { SkipForward, Plus } from 'lucide-react'
 import { useTimer } from '../hooks/useTimer'
 
 const RADIUS = 52
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
 export default function RestTimer({ duration, onDone, onSkip }) {
-  const { seconds, running, start, reset, add } = useTimer(duration, onDone)
+  const { seconds, start, reset, add } = useTimer(duration, onDone)
+  // The duration the current countdown is measured against — changes when the
+  // user picks a different preset or adds time, so the ring stays accurate.
+  const [activeDuration, setActiveDuration] = useState(duration)
 
   useEffect(() => {
+    setActiveDuration(duration)
     reset(duration)
     start(duration)
   }, [duration])
@@ -26,7 +30,7 @@ export default function RestTimer({ duration, onDone, onSkip }) {
     }
   }, [seconds])
 
-  const progress = seconds / duration
+  const progress = Math.min(1, Math.max(0, seconds / activeDuration))
   const dashoffset = CIRCUMFERENCE * (1 - progress)
   const isDone = seconds === 0
 
@@ -62,7 +66,7 @@ export default function RestTimer({ duration, onDone, onSkip }) {
 
         <div className="flex items-center gap-4">
           <button
-            onClick={() => add(15)}
+            onClick={() => { add(15); setActiveDuration(d => Math.max(d, seconds + 15)) }}
             className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gray-800 text-gray-300 text-sm font-medium active:bg-gray-700"
           >
             <Plus size={14} /> 15s
@@ -81,9 +85,9 @@ export default function RestTimer({ duration, onDone, onSkip }) {
           {[60, 75, 90].map(s => (
             <button
               key={s}
-              onClick={() => { reset(s); start(s) }}
+              onClick={() => { setActiveDuration(s); reset(s); start(s) }}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                duration === s ? 'bg-gray-700 text-white' : 'bg-gray-800/60 text-gray-500 active:bg-gray-700'
+                activeDuration === s ? 'bg-gray-700 text-white' : 'bg-gray-800/60 text-gray-500 active:bg-gray-700'
               }`}
             >
               {s}s
