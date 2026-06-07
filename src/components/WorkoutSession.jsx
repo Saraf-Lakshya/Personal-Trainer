@@ -153,6 +153,28 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
     })
   }
 
+  const handleSwapExercise = (idx, newExercise) => {
+    const oldExercise = exercises[idx]
+    const oldState = exerciseStates[idx]
+    const newState = { sets: buildInitialSets(newExercise, getPrevSets(newExercise.id, sessionKey, history)) }
+    setExercises(prev => prev.map((ex, i) => i === idx ? newExercise : ex))
+    setExerciseStates(prev => prev.map((es, i) => i === idx ? newState : es))
+    triggerUndo(`Swapped to "${newExercise.name}"`, () => {
+      setExercises(prev => prev.map((ex, i) => i === idx ? oldExercise : ex))
+      setExerciseStates(prev => prev.map((es, i) => i === idx ? oldState : es))
+    })
+  }
+
+  const handleAddAfter = (idx, newExercise) => {
+    const newState = { sets: buildInitialSets(newExercise, getPrevSets(newExercise.id, sessionKey, history)) }
+    setExercises(prev => [...prev.slice(0, idx + 1), newExercise, ...prev.slice(idx + 1)])
+    setExerciseStates(prev => [...prev.slice(0, idx + 1), newState, ...prev.slice(idx + 1)])
+    triggerUndo(`Added "${newExercise.name}"`, () => {
+      setExercises(prev => prev.filter((_, i) => i !== idx + 1))
+      setExerciseStates(prev => prev.filter((_, i) => i !== idx + 1))
+    })
+  }
+
   const deleteExercise = (idx) => {
     const removedEx = exercises[idx]
     const removedState = exerciseStates[idx]
@@ -309,6 +331,8 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
                 onRestStart={(dur) => setRestTimer({ duration: dur })}
                 editMode={editMode}
                 onDelete={editMode ? () => deleteExercise(i) : undefined}
+                onSwap={(alt) => handleSwapExercise(i, alt)}
+                onAddAfter={(alt) => handleAddAfter(i, alt)}
               />
             ))}
 

@@ -14,8 +14,11 @@ export default function ExerciseCard({
   onRestStart,
   onDelete,
   editMode,
+  onSwap,
+  onAddAfter,
 }) {
-  const { name, sets, reps, rest, muscles, cues, videoSearch, note, isCardio, isTime, duration, isCustom } = exercise
+  const { name, sets, reps, rest, muscles, cues, videoSearch, note, isCardio, isTime, duration, isCustom, alternatives } = exercise
+  const [showAlts, setShowAlts] = useState(false)
 
   const completedCount = currentSets.filter(s => s.completed).length
   const allDone = completedCount === (isCardio ? 1 : sets)
@@ -174,6 +177,47 @@ export default function ExerciseCard({
                 Target: <span className="text-white font-medium">{duration} minutes</span> at incline 8–12%, speed 3.5–4.5 km/h
               </p>
               <p className="text-xs text-gray-500 mt-1">Zone 2 — you should be able to hold a conversation</p>
+            </div>
+          )}
+
+          {/* Alternatives */}
+          {alternatives?.length > 0 && (
+            <div className="border-t border-gray-700/40 pt-3">
+              <button
+                onClick={() => setShowAlts(s => !s)}
+                className="w-full flex items-center justify-between py-1 text-xs text-gray-500 active:text-gray-400"
+              >
+                <span className="font-semibold uppercase tracking-wider">Alternatives</span>
+                <ChevronDown size={14} className={`transition-transform ${showAlts ? 'rotate-180' : ''}`} />
+              </button>
+              {showAlts && (
+                <div className="space-y-2 mt-2">
+                  {alternatives.map(alt => (
+                    <div key={alt.id} className="flex items-center gap-2 p-2.5 rounded-xl bg-gray-900/80 border border-gray-700/40">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-200 truncate">{alt.name}</p>
+                        <p className="text-xs text-gray-500">{alt.muscles.join(' · ')}</p>
+                      </div>
+                      {onSwap && (
+                        <button
+                          onClick={() => { onSwap(alt); setShowAlts(false) }}
+                          className="px-2.5 py-1.5 rounded-lg bg-orange-500/15 text-orange-400 text-xs font-semibold active:bg-orange-500/25 flex-shrink-0"
+                        >
+                          Swap
+                        </button>
+                      )}
+                      {onAddAfter && (
+                        <button
+                          onClick={() => { onAddAfter(alt); setShowAlts(false) }}
+                          className="px-2.5 py-1.5 rounded-lg bg-gray-700 text-gray-300 text-xs font-semibold active:bg-gray-600 flex-shrink-0"
+                        >
+                          + Add
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
