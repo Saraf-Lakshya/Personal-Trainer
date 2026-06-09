@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronUp, Trash2, Calendar } from 'lucide-react'
 import { SESSION_META, getSessionColor, getRating } from '../data/workoutPlan'
+import WorkoutCalendar from './WorkoutCalendar'
 
 function formatDate(isoStr) {
   const d = new Date(isoStr)
@@ -52,6 +53,10 @@ export default function HistoryView({ history, onDelete }) {
       <div className="px-5 pt-12 pb-6">
         <h1 className="text-2xl font-bold text-white">History</h1>
         <p className="text-gray-500 text-sm mt-1">{sorted.length} session{sorted.length !== 1 ? 's' : ''} logged</p>
+      </div>
+
+      <div className="px-4 mb-4">
+        <WorkoutCalendar history={history} />
       </div>
 
       <div className="px-4 pb-32 space-y-3">

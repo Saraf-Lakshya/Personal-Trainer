@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import { ArrowLeft, CheckCircle, Timer, Zap, Plus, Pencil, X, RotateCcw, ExternalLink } from 'lucide-react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { ArrowLeft, CheckCircle, Timer, Zap, Plus, Pencil, X, RotateCcw, ExternalLink, Trophy } from 'lucide-react'
 import { SESSIONS, getSessionColor, RATINGS } from '../data/workoutPlan'
 import ExerciseCard from './ExerciseCard'
 import RestTimer from './RestTimer'
@@ -49,6 +49,26 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
   const [showRating, setShowRating] = useState(false)
   const finishRecordRef = useRef(null)
 
+  // Personal-record celebration
+  const [prCelebration, setPrCelebration] = useState(null)
+  const prTimerRef = useRef(null)
+  const celebratedRef = useRef({})   // exerciseId -> heaviest weight already celebrated this session
+
+  // Heaviest completed weight per exercise across all past sessions (the bar to beat)
+  const historyPRs = useMemo(() => {
+    const map = {}
+    for (const sess of history) {
+      for (const ex of sess.exercises ?? []) {
+        for (const s of ex.sets) {
+          if (s.completed && s.weight > 0 && s.reps > 0) {
+            map[ex.exerciseId] = Math.max(map[ex.exerciseId] ?? 0, s.weight)
+          }
+        }
+      }
+    }
+    return map
+  }, [history])
+
   // Undo toast state
   const [pendingUndo, setPendingUndo] = useState(null) // { label, onUndo }
   const [undoSecsLeft, setUndoSecsLeft] = useState(0)
@@ -73,6 +93,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
     return () => {
       if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
       if (undoTickRef.current) clearInterval(undoTickRef.current)
+      if (prTimerRef.current) clearTimeout(prTimerRef.current)
     }
   }, [])
 
@@ -115,6 +136,26 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
     ))
   }
 
+  // Celebrate when a completed set beats the heaviest weight ever done for this
+  // exercise. Only fires if there's prior history to beat, and only on each new
+  // session high (so heavier follow-up sets re-trigger, repeats don't).
+  const maybeCelebratePR = (ex, set) => {
+    if (!ex || !set || ex.isCardio || ex.isTime) return
+    const w = set.weight || 0
+    const r = set.reps || 0
+    if (w <= 0 || r <= 0) return
+    const histBest = historyPRs[ex.id] ?? 0
+    if (histBest <= 0) return
+    const bar = Math.max(histBest, celebratedRef.current[ex.id] ?? 0)
+    if (w > bar) {
+      celebratedRef.current[ex.id] = w
+      setPrCelebration({ name: ex.name, weight: w, reps: r })
+      if ('vibrate' in navigator) navigator.vibrate([40, 30, 80])
+      if (prTimerRef.current) clearTimeout(prTimerRef.current)
+      prTimerRef.current = setTimeout(() => setPrCelebration(null), 3800)
+    }
+  }
+
   // Fix: derive all-done check from the updated state inside the functional setter
   const toggleSet = (exIdx, setIdx, completed) => {
     setExerciseStates(prev => {
@@ -132,6 +173,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
       }
       return updated
     })
+    if (completed) maybeCelebratePR(exercises[exIdx], exerciseStates[exIdx]?.sets[setIdx])
   }
 
   const addCustomExercise = () => {
@@ -315,6 +357,16 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
           </>
         )}
       </div>
+
+      {prCelebration && (
+        <div className="fixed top-4 inset-x-4 z-[80] flex items-center gap-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3 shadow-2xl shadow-orange-500/30 animate-slide-up">
+          <Trophy size={22} className="text-white flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-white font-bold text-sm">New personal record! 🎉</p>
+            <p className="text-white/90 text-xs truncate">{prCelebration.name} · {prCelebration.weight} kg × {prCelebration.reps}</p>
+          </div>
+        </div>
+      )}
 
       {phase === 'warmup' && (
         <WarmupCooldown phase="warmup" onDone={() => setPhase('workout')} />
