@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { TrendingUp, Award, BarChart2, ChevronDown } from 'lucide-react'
+import { TrendingUp, Award, BarChart2, ChevronDown, Scale } from 'lucide-react'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell,
@@ -9,6 +9,12 @@ import { ALL_TRACKABLE_EXERCISES } from '../data/workoutPlan'
 function shortDate(isoStr) {
   const d = new Date(isoStr)
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+// Weight dates are 'YYYY-MM-DD' — parse as local (not UTC) so the label doesn't shift a day.
+function weightShortDate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
 function getExerciseData(history, exerciseId) {
@@ -71,14 +77,14 @@ const CustomTooltip = ({ active, payload, label }) => {
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color }} className="font-mono font-semibold">
           {p.name}: {typeof p.value === 'number' ? p.value.toFixed(p.value % 1 === 0 ? 0 : 1) : p.value}
-          {p.name === 'maxWeight' ? ' kg' : p.name === 'totalVolume' ? ' kg' : ''}
+          {p.name === 'maxWeight' || p.name === 'totalVolume' || p.name === 'weight' ? ' kg' : ''}
         </p>
       ))}
     </div>
   )
 }
 
-export default function ProgressView({ history }) {
+export default function ProgressView({ history, weights = [] }) {
   const trackableExercises = ALL_TRACKABLE_EXERCISES.filter(ex => !ex.isCardio)
   const [selectedExercise, setSelectedExercise] = useState(trackableExercises[0]?.id ?? '')
   const [metric, setMetric] = useState('maxWeight')
@@ -92,12 +98,24 @@ export default function ProgressView({ history }) {
 
   const selectedEx = trackableExercises.find(e => e.id === selectedExercise)
 
-  if (!history.length) {
+  const weightChart = useMemo(() => weights.map(w => ({ date: weightShortDate(w.date), weight: w.weight })), [weights])
+  const weightStats = useMemo(() => {
+    if (!weights.length) return null
+    const vals = weights.map(w => w.weight)
+    return {
+      current: weights[weights.length - 1].weight,
+      start: weights[0].weight,
+      lowest: Math.min(...vals),
+      change: Math.round((weights[weights.length - 1].weight - weights[0].weight) * 10) / 10,
+    }
+  }, [weights])
+
+  if (!history.length && !weights.length) {
     return (
       <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center gap-4 px-8 text-center">
         <TrendingUp size={48} className="text-gray-700" />
         <p className="text-gray-500">No data yet.</p>
-        <p className="text-gray-600 text-sm">Complete workouts to see your progress charts here.</p>
+        <p className="text-gray-600 text-sm">Complete workouts or log your weight to see progress here.</p>
       </div>
     )
   }
@@ -110,6 +128,54 @@ export default function ProgressView({ history }) {
       </div>
 
       <div className="px-4 pb-32 space-y-6">
+
+        {/* Body Weight */}
+        {weightStats && (
+          <section>
+            <div className="flex items-center gap-2 mb-3">
+              <Scale size={15} className="text-blue-400" />
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Body Weight</p>
+            </div>
+            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-4">
+              <div className="flex items-end justify-between mb-3">
+                <div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-bold text-white tabular-nums">{weightStats.current}</span>
+                    <span className="text-sm text-gray-500">kg</span>
+                  </div>
+                  {weightStats.change !== 0 && (
+                    <p className={`text-xs font-medium mt-0.5 ${weightStats.change < 0 ? 'text-green-400' : 'text-orange-400'}`}>
+                      {weightStats.change < 0 ? '▼' : '▲'} {Math.abs(weightStats.change)} kg since start
+                    </p>
+                  )}
+                </div>
+                <div className="text-right text-xs text-gray-500 space-y-0.5">
+                  <p>Start: <span className="text-gray-400 font-mono">{weightStats.start} kg</span></p>
+                  <p>Lowest: <span className="text-gray-400 font-mono">{weightStats.lowest} kg</span></p>
+                </div>
+              </div>
+
+              {weightChart.length > 1 ? (
+                <ResponsiveContainer width="100%" height={160}>
+                  <LineChart data={weightChart} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
+                    <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis domain={['dataMin - 1', 'dataMax + 1']} tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Line
+                      type="monotone" dataKey="weight" name="weight"
+                      stroke="#60a5fa" strokeWidth={2.5}
+                      dot={{ fill: '#60a5fa', strokeWidth: 0, r: 3 }}
+                      activeDot={{ r: 6, fill: '#60a5fa' }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-xs text-gray-600 text-center py-4">Log on more days to see your trend line.</p>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Personal Records */}
         {prs.length > 0 && (

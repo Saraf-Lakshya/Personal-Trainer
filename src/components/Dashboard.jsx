@@ -1,31 +1,9 @@
 import { useState } from 'react'
-import { Calendar, Flame, TrendingUp, Dumbbell } from 'lucide-react'
-import { SESSIONS, SESSION_META, getSessionColor, getTodayScheduleInfo } from '../data/workoutPlan'
+import { TrendingUp, TrendingDown, Minus, Scale, Check, Plus } from 'lucide-react'
+import { SESSIONS, SESSION_META, WEEKS, getSessionColor, getTodayScheduleInfo } from '../data/workoutPlan'
+import { localDateStr } from '../hooks/useBodyWeight'
 
 const SESSION_ORDER = ['A', 'B', 'C', 'D', 'E']
-
-function getStreak(history) {
-  if (!history.length) return 0
-  let streak = 0
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const sortedDates = history
-    .map(h => { const d = new Date(h.date); d.setHours(0, 0, 0, 0); return d })
-    .sort((a, b) => b - a)
-
-  const uniqueDates = [...new Set(sortedDates.map(d => d.getTime()))].map(t => new Date(t))
-
-  for (let i = 0; i < uniqueDates.length; i++) {
-    const expected = new Date(today)
-    expected.setDate(expected.getDate() - i)
-    if (uniqueDates[i].getTime() === expected.getTime()) {
-      streak++
-    } else {
-      break
-    }
-  }
-  return streak
-}
 
 function getTotalVolume(session) {
   if (!session?.exercises) return 0
@@ -45,10 +23,9 @@ function formatDate(isoStr) {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
-export default function Dashboard({ history, user, onStartWorkout, onNavigate, onSignOut, onChangePassword }) {
+export default function Dashboard({ history, user, weights, onLogWeight, onStartWorkout, onNavigate, onSignOut, onChangePassword }) {
   const [showMenu, setShowMenu] = useState(false)
   const { weekType, todayName } = getTodayScheduleInfo()
-  const streak = getStreak(history)
   const recentSessions = [...history].reverse().slice(0, 4)
 
   const weekSessions = (() => {
@@ -60,6 +37,7 @@ export default function Dashboard({ history, user, onStartWorkout, onNavigate, o
   })()
 
   const totalSessions = history.length
+  const weeklyGoal = WEEKS[weekType]?.count ?? 4
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -111,27 +89,10 @@ export default function Dashboard({ history, user, onStartWorkout, onNavigate, o
         <p className="text-sm text-gray-500 mt-2">What are we doing today?</p>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-3 px-5 mb-6">
-        <StatCard
-          label="Streak"
-          value={streak}
-          unit="days"
-          icon={<Flame size={16} className="text-orange-400" />}
-          highlight={streak > 0}
-        />
-        <StatCard
-          label="This Week"
-          value={weekSessions}
-          unit="sessions"
-          icon={<Calendar size={16} className="text-blue-400" />}
-        />
-        <StatCard
-          label="Total"
-          value={totalSessions}
-          unit="sessions"
-          icon={<Dumbbell size={16} className="text-purple-400" />}
-        />
+      {/* Weekly goal + body weight */}
+      <div className="px-5 mb-6 space-y-3">
+        <WeeklyGoalCard done={weekSessions} goal={weeklyGoal} total={totalSessions} />
+        <BodyWeightCard weights={weights} onLogWeight={onLogWeight} />
       </div>
 
 
@@ -216,12 +177,163 @@ export default function Dashboard({ history, user, onStartWorkout, onNavigate, o
   )
 }
 
-function StatCard({ label, value, unit, icon, highlight }) {
+function ProgressRing({ progress, size = 60, stroke = 6, color = '#f97316', children }) {
+  const r = (size - stroke) / 2
+  const c = 2 * Math.PI * r
+  const offset = c * (1 - Math.min(1, Math.max(0, progress)))
   return (
-    <div className={`rounded-xl p-3 border ${highlight ? 'bg-orange-500/10 border-orange-500/20' : 'bg-gray-900/50 border-gray-800'}`}>
-      <div className="flex items-center gap-1.5 mb-2">{icon}<span className="text-xs text-gray-500">{label}</span></div>
-      <p className={`text-2xl font-bold tabular-nums ${highlight ? 'text-orange-400' : 'text-white'}`}>{value}</p>
-      <p className="text-xs text-gray-600">{unit}</p>
+    <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#1f2937" strokeWidth={stroke} />
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+          strokeLinecap="round" strokeDasharray={c} strokeDashoffset={offset}
+          style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">{children}</div>
+    </div>
+  )
+}
+
+function WeeklyGoalCard({ done, goal, total }) {
+  const remaining = Math.max(0, goal - done)
+  const hit = done >= goal
+  return (
+    <div className="flex items-center gap-4 rounded-2xl p-4 border border-gray-800 bg-gray-900/50">
+      <ProgressRing progress={goal > 0 ? done / goal : 0} color={hit ? '#22c55e' : '#f97316'}>
+        <span className={`text-sm font-bold tabular-nums ${hit ? 'text-green-400' : 'text-white'}`}>
+          {done}/{goal}
+        </span>
+      </ProgressRing>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-white">This week</p>
+        <p className="text-xs text-gray-500 mt-0.5">
+          {hit
+            ? '🎉 Weekly goal smashed — anything more is a bonus'
+            : `${remaining} session${remaining === 1 ? '' : 's'} to hit your goal`}
+        </p>
+        <p className="text-xs text-gray-600 mt-1">{total} total session{total === 1 ? '' : 's'} logged</p>
+      </div>
+    </div>
+  )
+}
+
+function Sparkline({ values, width = 120, height = 32, color = '#60a5fa' }) {
+  if (values.length < 2) return null
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - min || 1
+  const pts = values.map((v, i) => {
+    const x = (i / (values.length - 1)) * width
+    const y = height - ((v - min) / range) * (height - 4) - 2
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  }).join(' ')
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function BodyWeightCard({ weights, onLogWeight }) {
+  const [open, setOpen] = useState(false)
+  const [val, setVal] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState(false)
+
+  const latest = weights[weights.length - 1]
+  const prev = weights[weights.length - 2]
+  const delta = latest && prev ? Math.round((latest.weight - prev.weight) * 10) / 10 : null
+
+  const openInput = () => {
+    setVal(latest ? String(latest.weight) : '')
+    setErr(false)
+    setOpen(true)
+  }
+
+  const submit = async () => {
+    const w = parseFloat(val)
+    if (!w || w <= 0) return
+    setSaving(true)
+    setErr(false)
+    try {
+      await onLogWeight(w)
+      setOpen(false)
+      setVal('')
+    } catch (e) {
+      console.error('Log weight failed:', e)
+      setErr(true)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="rounded-2xl p-4 border border-gray-800 bg-gray-900/50">
+      <div className="flex items-center gap-4">
+        <div className="w-[60px] h-[60px] rounded-2xl bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+          <Scale size={24} className="text-blue-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-white">Body weight</p>
+          {latest ? (
+            <div className="flex items-baseline gap-2 mt-0.5">
+              <span className="text-2xl font-bold text-white tabular-nums">{latest.weight}</span>
+              <span className="text-xs text-gray-500">kg</span>
+              {delta !== null && delta !== 0 && (
+                <span className={`flex items-center gap-0.5 text-xs font-medium ${delta < 0 ? 'text-green-400' : 'text-orange-400'}`}>
+                  {delta < 0 ? <TrendingDown size={12} /> : <TrendingUp size={12} />}
+                  {Math.abs(delta)} kg
+                </span>
+              )}
+              {delta === 0 && <span className="flex items-center gap-0.5 text-xs text-gray-500"><Minus size={12} /> no change</span>}
+            </div>
+          ) : (
+            <p className="text-xs text-gray-500 mt-0.5">Log your weight to track your trend</p>
+          )}
+        </div>
+        {weights.length >= 2 && (
+          <Sparkline values={weights.slice(-12).map(w => w.weight)} />
+        )}
+      </div>
+
+      {open ? (
+        <div className="mt-3 flex items-center gap-2">
+          <input
+            type="number"
+            inputMode="decimal"
+            autoFocus
+            value={val}
+            onChange={e => setVal(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && submit()}
+            placeholder="kg"
+            className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-white text-center font-mono text-base focus:border-orange-500 focus:outline-none"
+          />
+          <button
+            onClick={submit}
+            disabled={saving || !val}
+            className="w-11 h-11 rounded-xl bg-green-500 text-white flex items-center justify-center active:bg-green-600 disabled:opacity-40 flex-shrink-0"
+          >
+            <Check size={18} />
+          </button>
+          <button
+            onClick={() => setOpen(false)}
+            className="px-3 h-11 rounded-xl bg-gray-800 text-gray-400 text-sm active:bg-gray-700 flex-shrink-0"
+          >
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={openInput}
+          className="mt-3 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gray-800 text-gray-200 text-sm font-semibold active:bg-gray-700"
+        >
+          <Plus size={15} /> {latest && latest.date === localDateStr() ? "Update today's weight" : "Log today's weight"}
+        </button>
+      )}
+
+      {err && <p className="text-red-400 text-xs mt-2 text-center">Couldn't save. Check your connection (or that the weights table exists).</p>}
     </div>
   )
 }

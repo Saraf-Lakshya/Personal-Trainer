@@ -9,6 +9,7 @@ import SignIn from './components/SignIn'
 import UpdatePassword from './components/UpdatePassword'
 import { useAuth } from './hooks/useAuth'
 import { useWorkoutData } from './hooks/useWorkoutData'
+import { useBodyWeight } from './hooks/useBodyWeight'
 
 function LoadingScreen() {
   return (
@@ -45,6 +46,7 @@ function ErrorScreen({ onRetry, onSignOut }) {
 export default function App() {
   const { user, recoveryMode, signOut } = useAuth()
   const { sessions, loading, loadError, addSession, deleteSession, refetch } = useWorkoutData(user?.id)
+  const { weights, logWeight } = useBodyWeight(user?.id)
 
   const [view, setView] = useState('dashboard')
   const [activeSessionKey, setActiveSessionKey] = useState(null)
@@ -119,6 +121,8 @@ export default function App() {
             <Dashboard
               history={sessions}
               user={user}
+              weights={weights}
+              onLogWeight={logWeight}
               onStartWorkout={handleStartWorkout}
               onNavigate={handleNavigate}
               onSignOut={signOut}
@@ -132,7 +136,7 @@ export default function App() {
             <HistoryView history={sessions} onDelete={deleteSession} />
           )}
           {view === 'progress' && (
-            <ProgressView history={sessions} />
+            <ProgressView history={sessions} weights={weights} />
           )}
           <Navigation
             current={view === 'picker' ? 'workout' : view}

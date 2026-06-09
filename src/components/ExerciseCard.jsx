@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, ExternalLink, Check, Clock, Timer, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, ExternalLink, Check, Clock, Timer, Trash2, History, TrendingUp } from 'lucide-react'
 import { getYouTubeSearchUrl } from '../data/workoutPlan'
 import MuscleMap from './MuscleMap'
 
@@ -23,6 +23,17 @@ export default function ExerciseCard({
   const completedCount = currentSets.filter(s => s.completed).length
   const allDone = completedCount === (isCardio ? 1 : sets)
   const progress = sets > 0 ? completedCount / sets : 0
+
+  // Progressive overload: what did we actually complete last time, and should we go heavier?
+  const prevDone = (prevSets ?? []).filter(s => s.completed)
+  let overloadTip = null
+  if (!isCardio && !isTime && prevDone.length > 0) {
+    const topWeight = Math.max(...prevDone.map(s => s.weight || 0))
+    const hitAllReps = reps > 0 && prevDone.length >= sets && prevDone.every(s => (s.reps || 0) >= reps)
+    if (topWeight > 0 && hitAllReps) {
+      overloadTip = `You hit all your reps last time — try ${topWeight + 2.5} kg today`
+    }
+  }
 
   const handleSetToggle = (idx) => {
     const wasCompleted = currentSets[idx].completed
@@ -138,6 +149,26 @@ export default function ExerciseCard({
               Watch Form Demo on YouTube
               <ExternalLink size={13} className="ml-auto" />
             </a>
+          )}
+
+          {/* Last time / progressive overload */}
+          {!isCardio && prevDone.length > 0 && (
+            <div className="rounded-xl bg-gray-900/60 border border-gray-700/40 px-3 py-2.5">
+              <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                <History size={12} />
+                <span className="font-semibold uppercase tracking-wider">Last time</span>
+              </div>
+              <p className="text-sm text-gray-300 mt-1 font-mono">
+                {isTime
+                  ? prevDone.map(s => `${s.duration || 0}s`).join('  ·  ')
+                  : prevDone.map(s => `${s.weight || 0}×${s.reps || 0}`).join('  ·  ')}
+              </p>
+              {overloadTip && (
+                <p className="flex items-center gap-1 text-xs text-orange-400 mt-1.5 font-medium">
+                  <TrendingUp size={12} /> {overloadTip}
+                </p>
+              )}
+            </div>
           )}
 
           {/* Set tracking */}
