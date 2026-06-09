@@ -8,6 +8,7 @@ function fromDb(row) {
     sessionKey: row.session_key,
     durationSeconds: row.duration_seconds,
     exercises: row.exercises ?? [],
+    rating: row.rating ?? null,
   }
 }
 
@@ -56,13 +57,26 @@ export function useWorkoutData(userId) {
   useEffect(() => { fetchSessions() }, [fetchSessions])
 
   const addSession = useCallback(async (record) => {
+    // Core insert never includes rating, so a missing `rating` column can never
+    // break saving a workout.
     const { data, error } = await supabase
       .from('sessions')
       .insert(toDb(record, userId))
       .select()
       .single()
     if (error) throw error
-    setSessions(prev => [...prev, fromDb(data)])
+    let saved = fromDb(data)
+    // Rating is best-effort: persisted only if the column exists.
+    if (record.rating != null) {
+      const { error: rErr } = await supabase
+        .from('sessions')
+        .update({ rating: record.rating })
+        .eq('id', data.id)
+        .eq('user_id', userId)
+      if (rErr) console.warn('Could not save session rating (is the `rating` column present?)', rErr)
+      else saved = { ...saved, rating: record.rating }
+    }
+    setSessions(prev => [...prev, saved])
   }, [userId])
 
   const deleteSession = useCallback(async (id) => {

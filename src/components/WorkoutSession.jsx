@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { ArrowLeft, CheckCircle, Timer, Zap, Plus, Pencil, X, RotateCcw, ExternalLink } from 'lucide-react'
-import { SESSIONS, getSessionColor } from '../data/workoutPlan'
+import { SESSIONS, getSessionColor, RATINGS } from '../data/workoutPlan'
 import ExerciseCard from './ExerciseCard'
 import RestTimer from './RestTimer'
 import WarmupCooldown from './WarmupCooldown'
@@ -46,6 +46,8 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
   const [cooldownRecord, setCooldownRecord] = useState(null)
   const cooldownRecordRef = useRef(null)
   const [confirmExit, setConfirmExit] = useState(false)
+  const [showRating, setShowRating] = useState(false)
+  const finishRecordRef = useRef(null)
 
   // Undo toast state
   const [pendingUndo, setPendingUndo] = useState(null) // { label, onUndo }
@@ -227,7 +229,8 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
           })),
     }
     if (session.isHomeSession) {
-      onComplete(record)
+      finishRecordRef.current = record
+      setShowRating(true)
     } else {
       cooldownRecordRef.current = record   // ref: never stale
       setCooldownRecord(record)            // state: drives UI (save error banner)
@@ -236,7 +239,14 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
   }
 
   const handleCooldownDone = () => {
-    onComplete(cooldownRecordRef.current)
+    finishRecordRef.current = cooldownRecordRef.current
+    setShowRating(true)
+  }
+
+  const submitRating = (rating) => {
+    const rec = finishRecordRef.current
+    setShowRating(false)
+    onComplete(rating != null ? { ...rec, rating } : rec)
   }
 
   const formatElapsed = (secs) => {
@@ -457,6 +467,33 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
           onDone={() => setRestTimer(null)}
           onSkip={() => setRestTimer(null)}
         />
+      )}
+
+      {showRating && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-gray-950/90 backdrop-blur-sm px-6 animate-fade-in">
+          <div className="w-full max-w-sm">
+            <p className="text-white font-bold text-xl text-center">How did that feel?</p>
+            <p className="text-gray-500 text-sm text-center mt-1">Logging this helps you spot your patterns.</p>
+            <div className="flex justify-between gap-2 mt-7">
+              {RATINGS.map(r => (
+                <button
+                  key={r.value}
+                  onClick={() => submitRating(r.value)}
+                  className="flex-1 flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-gray-900 border border-gray-800 active:bg-gray-800 active:scale-95 transition-transform"
+                >
+                  <span className="text-3xl">{r.emoji}</span>
+                  <span className="text-[10px] text-gray-400 font-medium">{r.label}</span>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => submitRating(null)}
+              className="w-full text-gray-500 text-sm mt-6 py-2 active:text-gray-300"
+            >
+              Skip
+            </button>
+          </div>
+        </div>
       )}
 
       {confirmExit && (

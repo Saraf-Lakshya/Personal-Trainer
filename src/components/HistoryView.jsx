@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronUp, Trash2, Calendar } from 'lucide-react'
-import { SESSION_META, getSessionColor } from '../data/workoutPlan'
+import { SESSION_META, getSessionColor, getRating } from '../data/workoutPlan'
 
 function formatDate(isoStr) {
   const d = new Date(isoStr)
@@ -60,6 +60,7 @@ export default function HistoryView({ history, onDelete }) {
           const meta = SESSION_META[session.sessionKey]
           const vol = getTotalVolume(session)
           const done = getCompletedSets(session)
+          const rating = getRating(session.rating)
           const isExpanded = expandedId === session.id
 
           return (
@@ -72,7 +73,10 @@ export default function HistoryView({ history, onDelete }) {
                   {session.sessionKey}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-white">{meta?.label ?? `Session ${session.sessionKey}`}</p>
+                  <p className="font-semibold text-white flex items-center gap-1.5">
+                    {meta?.label ?? `Session ${session.sessionKey}`}
+                    {rating && <span title={rating.label} className="text-sm">{rating.emoji}</span>}
+                  </p>
                   <p className="text-xs text-gray-500">{formatDate(session.date)} · {formatTime(session.date)}</p>
                   <div className="flex gap-3 mt-1">
                     {vol > 0 && <span className="text-xs text-gray-400">{vol.toLocaleString()} kg vol</span>}

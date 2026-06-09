@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, ExternalLink, Check, Clock, Timer, Trash2, History, TrendingUp } from 'lucide-react'
-import { getYouTubeSearchUrl } from '../data/workoutPlan'
+import { ChevronDown, ChevronUp, ExternalLink, Check, Clock, Timer, Trash2, History, TrendingUp, Zap } from 'lucide-react'
+import { getYouTubeSearchUrl, estimateOneRepMax } from '../data/workoutPlan'
 import MuscleMap from './MuscleMap'
 
 export default function ExerciseCard({
@@ -34,6 +34,11 @@ export default function ExerciseCard({
       overloadTip = `You hit all your reps last time — try ${topWeight + 2.5} kg today`
     }
   }
+
+  // Best estimated 1-rep max from completed sets this session (Epley).
+  const best1RM = (!isCardio && !isTime)
+    ? currentSets.reduce((best, s) => s.completed ? Math.max(best, estimateOneRepMax(s.weight, s.reps)) : best, 0)
+    : 0
 
   const handleSetToggle = (idx) => {
     const wasCompleted = currentSets[idx].completed
@@ -199,6 +204,13 @@ export default function ExerciseCard({
                   />
                 )
               })}
+
+              {best1RM > 0 && (
+                <div className="flex items-center justify-center gap-1.5 pt-1 text-xs text-gray-500">
+                  <Zap size={12} className="text-orange-400" />
+                  Est. 1-rep max <span className="text-gray-300 font-mono font-semibold">~{Math.round(best1RM * 2) / 2} kg</span>
+                </div>
+              )}
             </div>
           )}
 

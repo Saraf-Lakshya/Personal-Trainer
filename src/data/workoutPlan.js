@@ -922,6 +922,26 @@ export function getYouTubeSearchUrl(searchQuery) {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`
 }
 
+// How a session felt (1–5), captured on finish.
+export const RATINGS = [
+  { value: 1, emoji: '😫', label: 'Drained' },
+  { value: 2, emoji: '😕', label: 'Rough' },
+  { value: 3, emoji: '🙂', label: 'Okay' },
+  { value: 4, emoji: '💪', label: 'Strong' },
+  { value: 5, emoji: '🔥', label: 'Crushed it' },
+]
+
+export function getRating(value) {
+  return RATINGS.find(r => r.value === value) ?? null
+}
+
+// Estimated one-rep max (Epley formula).
+export function estimateOneRepMax(weight, reps) {
+  if (!weight || !reps || reps < 1) return 0
+  if (reps === 1) return weight
+  return weight * (1 + reps / 30)
+}
+
 export function getSessionColor(sessionKey) {
   const colors = {
     A: { bg: 'bg-orange-500', text: 'text-orange-400', border: 'border-orange-500/30', light: 'bg-orange-500/10' },
