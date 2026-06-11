@@ -82,7 +82,7 @@ export default function RestTimer({ duration, onDone, onSkip }) {
         </div>
 
         <div className="flex gap-3">
-          {[60, 75, 90].map(s => (
+          {[60, 90].map(s => (
             <button
               key={s}
               onClick={() => { setActiveDuration(s); reset(s); start(s) }}

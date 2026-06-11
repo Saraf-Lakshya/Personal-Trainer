@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, ExternalLink, Check, Clock, Timer, Trash2, History, TrendingUp, Zap } from 'lucide-react'
+import { ChevronDown, ChevronUp, ExternalLink, Check, Timer, Trash2, TrendingUp, Zap, Circle, CheckCircle2, Info } from 'lucide-react'
 import { getYouTubeSearchUrl, estimateOneRepMax } from '../data/workoutPlan'
 import MuscleMap from './MuscleMap'
 
@@ -17,8 +17,8 @@ export default function ExerciseCard({
   onSwap,
   onAddAfter,
 }) {
-  const { name, sets, reps, rest, muscles, cues, videoSearch, note, isCardio, isTime, duration, isCustom, alternatives } = exercise
-  const [showAlts, setShowAlts] = useState(false)
+  const { name, sets, reps, rest, muscles, cues, videoSearch, note, isCardio, isTime, duration, alternatives } = exercise
+  const [showInfo, setShowInfo] = useState(false)
 
   const completedCount = currentSets.filter(s => s.completed).length
   const allDone = completedCount === (isCardio ? 1 : sets)
@@ -40,6 +40,8 @@ export default function ExerciseCard({
     ? currentSets.reduce((best, s) => s.completed ? Math.max(best, estimateOneRepMax(s.weight, s.reps)) : best, 0)
     : 0
 
+  const hasInfo = muscles?.length > 0 || cues?.length > 0 || !!videoSearch || alternatives?.length > 0
+
   const handleSetToggle = (idx) => {
     const wasCompleted = currentSets[idx].completed
     onSetComplete(idx, !wasCompleted)
@@ -51,54 +53,42 @@ export default function ExerciseCard({
       allDone ? 'bg-gray-800/60 border-green-500/30' : 'bg-gray-800/80 border-gray-700/50'
     }`}>
       {/* Header */}
-      <div className="flex items-start gap-2 p-4">
+      <div className="flex items-center gap-2 p-4">
         <button
-          className="flex items-start gap-3 flex-1 text-left active:opacity-80"
+          className="flex items-center gap-3 flex-1 text-left active:opacity-80 min-w-0"
           onClick={onToggleExpand}
         >
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold mt-0.5 ${
-            allDone ? 'bg-green-500/20 text-green-400' : 'bg-gray-700 text-gray-300'
-          }`}>
-            {allDone
-              ? <Check size={18} strokeWidth={2.5} className="text-green-400" />
-              : <span className="text-xs">{completedCount}/{sets}</span>
-            }
-          </div>
+          {allDone
+            ? <CheckCircle2 size={20} className="text-green-400 flex-shrink-0" />
+            : <Circle size={20} className="text-gray-600 flex-shrink-0" />
+          }
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className={`font-semibold text-base leading-tight ${allDone ? 'text-gray-400 line-through decoration-gray-600' : 'text-white'}`}>
+            <div className="flex items-baseline justify-between gap-2">
+              <h3 className={`font-semibold text-base leading-tight truncate ${allDone ? 'text-gray-400 line-through decoration-gray-600' : 'text-white'}`}>
                 {name}
               </h3>
-              {note && <span className="text-xs text-gray-500 bg-gray-700/60 px-1.5 py-0.5 rounded">{note}</span>}
+              <span className="text-sm text-gray-500 flex-shrink-0 tabular-nums">{completedCount}/{isCardio ? 1 : sets}</span>
             </div>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-gray-400 text-sm">
+            <p className="flex items-center gap-1.5 flex-wrap text-gray-500 text-sm mt-1">
+              <span>
                 {isCardio ? `${duration} min` : isTime ? `${sets}×${duration}s` : `${sets}×${reps}`}
+                {rest > 0 ? ` · ${rest}s rest` : ''}
               </span>
-              {rest > 0 && (
-                <span className="flex items-center gap-0.5 text-xs text-gray-600">
-                  <Clock size={10} /> {rest}s rest
-                </span>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-1 mt-1.5">
-              {muscles.slice(0, 2).map(m => (
-                <span key={m} className="text-xs text-gray-500 bg-gray-700/40 px-1.5 py-0.5 rounded-full">{m}</span>
-              ))}
-            </div>
+              {note && <span className="text-xs text-gray-500 bg-gray-700/60 px-1.5 py-0.5 rounded">{note}</span>}
+            </p>
           </div>
 
           {isExpanded
-            ? <ChevronUp size={18} className="text-gray-500 flex-shrink-0 mt-1" />
-            : <ChevronDown size={18} className="text-gray-500 flex-shrink-0 mt-1" />
+            ? <ChevronUp size={16} className="text-gray-700 flex-shrink-0" />
+            : <ChevronDown size={16} className="text-gray-700 flex-shrink-0" />
           }
         </button>
 
         {editMode && onDelete && (
           <button
             onClick={onDelete}
-            className="w-9 h-9 rounded-xl flex items-center justify-center bg-red-500/10 text-red-400 active:bg-red-500/20 flex-shrink-0 mt-0.5"
+            className="w-9 h-9 rounded-xl flex items-center justify-center bg-red-500/10 text-red-400 active:bg-red-500/20 flex-shrink-0"
           >
             <Trash2 size={16} />
           </button>
@@ -117,60 +107,22 @@ export default function ExerciseCard({
 
       {/* Expanded content */}
       {isExpanded && (
-        <div className="px-4 pb-4 space-y-4 animate-slide-up">
-
-          {/* Muscle map */}
-          {muscles?.length > 0 && !isCustom && (
-            <div className="bg-gray-900/60 rounded-xl p-3">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Muscles</p>
-              <MuscleMap muscles={muscles} />
-            </div>
-          )}
-
-          {/* Form cues */}
-          {cues?.length > 0 && (
-            <div className="bg-gray-900/60 rounded-xl p-3 space-y-2">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Form Cues</p>
-              {cues.map((cue, i) => (
-                <div key={i} className="flex gap-2">
-                  <span className="text-orange-500 text-xs font-bold mt-0.5 flex-shrink-0">{i + 1}.</span>
-                  <p className="text-gray-300 text-sm leading-relaxed">{cue}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Video link */}
-          {videoSearch && (
-            <a
-              href={getYouTubeSearchUrl(videoSearch)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium active:bg-red-500/20"
-            >
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-red-500 flex-shrink-0">
-                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-              </svg>
-              Watch Form Demo on YouTube
-              <ExternalLink size={13} className="ml-auto" />
-            </a>
-          )}
+        <div className="px-4 pb-4 pt-3 space-y-4 border-t border-gray-800 animate-slide-up">
 
           {/* Last time / progressive overload */}
           {!isCardio && prevDone.length > 0 && (
-            <div className="rounded-xl bg-gray-900/60 border border-gray-700/40 px-3 py-2.5">
-              <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                <History size={12} />
-                <span className="font-semibold uppercase tracking-wider">Last time</span>
-              </div>
-              <p className="text-sm text-gray-300 mt-1 font-mono">
-                {isTime
-                  ? prevDone.map(s => `${s.duration || 0}s`).join('  ·  ')
-                  : prevDone.map(s => `${s.weight || 0}×${s.reps || 0}`).join('  ·  ')}
+            <div>
+              <p className="text-sm text-gray-500">
+                Last time{' '}
+                <span className="text-gray-300 font-mono">
+                  {isTime
+                    ? prevDone.map(s => `${s.duration || 0}s`).join('  ')
+                    : prevDone.map(s => `${s.weight || 0}×${s.reps || 0}`).join('  ')}
+                </span>
               </p>
               {overloadTip && (
-                <p className="flex items-center gap-1 text-xs text-orange-400 mt-1.5 font-medium">
-                  <TrendingUp size={12} /> {overloadTip}
+                <p className="flex items-center gap-1 text-sm text-orange-400 mt-1 font-medium">
+                  <TrendingUp size={13} /> {overloadTip}
                 </p>
               )}
             </div>
@@ -208,7 +160,7 @@ export default function ExerciseCard({
               {best1RM > 0 && (
                 <div className="flex items-center justify-center gap-1.5 pt-1 text-xs text-gray-500">
                   <Zap size={12} className="text-orange-400" />
-                  Est. 1-rep max <span className="text-gray-300 font-mono font-semibold">~{Math.round(best1RM * 2) / 2} kg</span>
+                  Est. 1RM <span className="text-gray-300 font-mono font-semibold">~{Math.round(best1RM * 2) / 2} kg</span>
                 </div>
               )}
             </div>
@@ -223,42 +175,82 @@ export default function ExerciseCard({
             </div>
           )}
 
-          {/* Alternatives */}
-          {alternatives?.length > 0 && (
-            <div className="border-t border-gray-700/40 pt-3">
+          {/* Info: muscle map, form cues, video, alternatives */}
+          {hasInfo && (
+            <div className="border-t border-gray-800 pt-3">
               <button
-                onClick={() => setShowAlts(s => !s)}
-                className="w-full flex items-center justify-between py-1 text-xs text-gray-500 active:text-gray-400"
+                onClick={() => setShowInfo(s => !s)}
+                className="w-full flex items-center justify-between text-sm text-gray-500 active:text-gray-400"
               >
-                <span className="font-semibold uppercase tracking-wider">Alternatives</span>
-                <ChevronDown size={14} className={`transition-transform ${showAlts ? 'rotate-180' : ''}`} />
+                <span className="flex items-center gap-1.5"><Info size={14} /> Form, video & alternatives</span>
+                <ChevronDown size={14} className={`transition-transform ${showInfo ? 'rotate-180' : ''}`} />
               </button>
-              {showAlts && (
-                <div className="space-y-2 mt-2">
-                  {alternatives.map(alt => (
-                    <div key={alt.id} className="flex items-center gap-2 p-2.5 rounded-xl bg-gray-900/80 border border-gray-700/40">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-200 truncate">{alt.name}</p>
-                        <p className="text-xs text-gray-500">{alt.muscles.join(' · ')}</p>
-                      </div>
-                      {onSwap && (
-                        <button
-                          onClick={() => { onSwap(alt); setShowAlts(false) }}
-                          className="px-2.5 py-1.5 rounded-lg bg-orange-500/15 text-orange-400 text-xs font-semibold active:bg-orange-500/25 flex-shrink-0"
-                        >
-                          Swap
-                        </button>
-                      )}
-                      {onAddAfter && (
-                        <button
-                          onClick={() => { onAddAfter(alt); setShowAlts(false) }}
-                          className="px-2.5 py-1.5 rounded-lg bg-gray-700 text-gray-300 text-xs font-semibold active:bg-gray-600 flex-shrink-0"
-                        >
-                          + Add
-                        </button>
-                      )}
+
+              {showInfo && (
+                <div className="space-y-3 mt-3">
+                  {muscles?.length > 0 && (
+                    <div className="bg-gray-900/60 rounded-xl p-3">
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Muscles</p>
+                      <MuscleMap muscles={muscles} />
                     </div>
-                  ))}
+                  )}
+
+                  {cues?.length > 0 && (
+                    <div className="bg-gray-900/60 rounded-xl p-3 space-y-2">
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Form Cues</p>
+                      {cues.map((cue, i) => (
+                        <div key={i} className="flex gap-2">
+                          <span className="text-orange-500 text-xs font-bold mt-0.5 flex-shrink-0">{i + 1}.</span>
+                          <p className="text-gray-300 text-sm leading-relaxed">{cue}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {videoSearch && (
+                    <a
+                      href={getYouTubeSearchUrl(videoSearch)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium active:bg-red-500/20"
+                    >
+                      <svg viewBox="0 0 24 24" className="w-4 h-4 fill-red-500 flex-shrink-0">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                      </svg>
+                      Watch Form Demo on YouTube
+                      <ExternalLink size={13} className="ml-auto" />
+                    </a>
+                  )}
+
+                  {alternatives?.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Alternatives</p>
+                      {alternatives.map(alt => (
+                        <div key={alt.id} className="flex items-center gap-2 p-2.5 rounded-xl bg-gray-900/80 border border-gray-700/40">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-200 truncate">{alt.name}</p>
+                            <p className="text-xs text-gray-500">{alt.muscles.join(' · ')}</p>
+                          </div>
+                          {onSwap && (
+                            <button
+                              onClick={() => onSwap(alt)}
+                              className="px-2.5 py-1.5 rounded-lg bg-orange-500/15 text-orange-400 text-xs font-semibold active:bg-orange-500/25 flex-shrink-0"
+                            >
+                              Swap
+                            </button>
+                          )}
+                          {onAddAfter && (
+                            <button
+                              onClick={() => onAddAfter(alt)}
+                              className="px-2.5 py-1.5 rounded-lg bg-gray-700 text-gray-300 text-xs font-semibold active:bg-gray-600 flex-shrink-0"
+                            >
+                              + Add
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

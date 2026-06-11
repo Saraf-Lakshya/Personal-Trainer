@@ -314,17 +314,12 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
           >
             <ArrowLeft size={18} className="text-gray-400" />
           </button>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${colors.bg} text-white`}>
-                Session {sessionKey}
-              </span>
-              <span className="font-semibold text-white">{session.label}</span>
-            </div>
-            <p className="text-xs text-gray-500 mt-0.5">{session.muscles}</p>
+          <div className="flex-1 flex items-center gap-2 min-w-0">
+            <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${colors.bg}`} />
+            <span className="font-semibold text-white truncate">{session.label}</span>
           </div>
 
-          {phase === 'workout' && (
+          {phase === 'workout' && !session.isHomeSession && (
             <>
               <div className="flex items-center gap-1.5 text-sm text-gray-400">
                 <Timer size={14} />
@@ -333,7 +328,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
               <button
                 onClick={() => setEditMode(m => !m)}
                 className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors ${
-                  editMode ? 'bg-orange-500/20 text-orange-400' : 'bg-gray-800 text-gray-400 active:bg-gray-700'
+                  editMode ? 'text-orange-400' : 'text-gray-500 active:text-gray-300'
                 }`}
               >
                 {editMode ? <X size={16} /> : <Pencil size={16} />}
@@ -343,18 +338,12 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
         </div>
 
         {phase === 'workout' && !session.isHomeSession && (
-          <>
-            <div className="h-1 mx-4 mb-3 bg-gray-800 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${allComplete ? 'bg-green-500' : 'bg-orange-500'}`}
-                style={{ width: `${progressPct}%` }}
-              />
-            </div>
-            <div className="flex items-center justify-between px-4 pb-3 text-xs text-gray-500">
-              <span>{completedSets} / {totalSets} sets done</span>
-              <span className={allComplete ? 'text-green-400 font-medium' : ''}>{Math.round(progressPct)}%</span>
-            </div>
-          </>
+          <div className="h-1 mx-4 mb-3 bg-gray-800 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${allComplete ? 'bg-green-500' : 'bg-orange-500'}`}
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
         )}
       </div>
 
