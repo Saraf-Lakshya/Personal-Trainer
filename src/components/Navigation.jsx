@@ -28,9 +28,11 @@ export default function Navigation({ current, onNavigate, activeSession }) {
                   <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-orange-500 rounded-full border-2 border-gray-900" />
                 )}
               </div>
-              <span className={`text-[10px] font-medium tracking-wide ${isActive ? 'text-orange-400' : 'text-gray-500'}`}>
-                {label}
-              </span>
+              {isActive && (
+                <span className="text-[10px] font-medium tracking-wide text-orange-400">
+                  {label}
+                </span>
+              )}
             </button>
           )
         })}

@@ -75,8 +75,8 @@ export default function WorkoutCalendar({ history }) {
             <div
               key={day}
               className={`aspect-square flex items-center justify-center rounded-lg text-xs font-medium ${
-                color ? `${color.bg} text-white` : 'bg-gray-800/40 text-gray-600'
-              } ${isToday ? 'ring-2 ring-white/70' : ''}`}
+                color ? `${color.light} ${color.text}` : 'text-gray-600'
+              } ${isToday ? 'ring-1 ring-gray-600' : ''}`}
             >
               {day}
             </div>

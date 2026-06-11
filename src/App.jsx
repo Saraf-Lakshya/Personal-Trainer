@@ -124,7 +124,6 @@ export default function App() {
               weights={weights}
               onLogWeight={logWeight}
               onStartWorkout={handleStartWorkout}
-              onNavigate={handleNavigate}
               onSignOut={signOut}
               onChangePassword={() => setChangingPassword(true)}
             />

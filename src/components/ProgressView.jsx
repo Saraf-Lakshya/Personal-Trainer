@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { TrendingUp, Award, BarChart2, ChevronDown, Scale } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell,
@@ -127,73 +127,64 @@ export default function ProgressView({ history, weights = [] }) {
         <p className="text-gray-500 text-sm mt-1">Track your gains session by session</p>
       </div>
 
-      <div className="px-4 pb-32 space-y-6">
+      <div className="px-5 pb-32 space-y-8">
 
         {/* Body Weight */}
         {weightStats && (
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <Scale size={15} className="text-blue-400" />
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Body Weight</p>
-            </div>
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-4">
-              <div className="flex items-end justify-between mb-3">
-                <div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-white tabular-nums">{weightStats.current}</span>
-                    <span className="text-sm text-gray-500">kg</span>
-                  </div>
-                  {weightStats.change !== 0 && (
-                    <p className={`text-xs font-medium mt-0.5 ${weightStats.change < 0 ? 'text-green-400' : 'text-orange-400'}`}>
-                      {weightStats.change < 0 ? '▼' : '▲'} {Math.abs(weightStats.change)} kg since start
-                    </p>
-                  )}
+            <p className="text-sm text-gray-500 mb-2">Body weight</p>
+            <div className="flex items-end justify-between mb-3">
+              <div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-bold text-white tabular-nums">{weightStats.current}</span>
+                  <span className="text-sm text-gray-500">kg</span>
                 </div>
-                <div className="text-right text-xs text-gray-500 space-y-0.5">
-                  <p>Start: <span className="text-gray-400 font-mono">{weightStats.start} kg</span></p>
-                  <p>Lowest: <span className="text-gray-400 font-mono">{weightStats.lowest} kg</span></p>
-                </div>
+                {weightStats.change !== 0 && (
+                  <p className={`text-xs font-medium mt-0.5 ${weightStats.change < 0 ? 'text-green-400' : 'text-orange-400'}`}>
+                    {weightStats.change < 0 ? '▼' : '▲'} {Math.abs(weightStats.change)} kg since start
+                  </p>
+                )}
               </div>
-
-              {weightChart.length > 1 ? (
-                <ResponsiveContainer width="100%" height={160}>
-                  <LineChart data={weightChart} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
-                    <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <YAxis domain={['dataMin - 1', 'dataMax + 1']} tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Line
-                      type="monotone" dataKey="weight" name="weight"
-                      stroke="#60a5fa" strokeWidth={2.5}
-                      dot={{ fill: '#60a5fa', strokeWidth: 0, r: 3 }}
-                      activeDot={{ r: 6, fill: '#60a5fa' }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-xs text-gray-600 text-center py-4">Log on more days to see your trend line.</p>
-              )}
+              <div className="text-right text-xs text-gray-500 space-y-0.5">
+                <p>Start: <span className="text-gray-400 font-mono">{weightStats.start} kg</span></p>
+                <p>Lowest: <span className="text-gray-400 font-mono">{weightStats.lowest} kg</span></p>
+              </div>
             </div>
+
+            {weightChart.length > 1 ? (
+              <ResponsiveContainer width="100%" height={160}>
+                <LineChart data={weightChart} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis domain={['dataMin - 1', 'dataMax + 1']} tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Line
+                    type="monotone" dataKey="weight" name="weight"
+                    stroke="#f97316" strokeWidth={2.5}
+                    dot={{ fill: '#f97316', strokeWidth: 0, r: 3 }}
+                    activeDot={{ r: 6, fill: '#f97316' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-xs text-gray-600 text-center py-4">Log on more days to see your trend line.</p>
+            )}
           </section>
         )}
 
         {/* Personal Records */}
         {prs.length > 0 && (
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <Award size={15} className="text-yellow-400" />
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Personal Records</p>
-            </div>
-            <div className="space-y-2">
+            <p className="text-sm text-gray-500 mb-2">Personal records</p>
+            <div>
               {prs.slice(0, 5).map((pr, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-gray-900/50 border border-gray-800">
-                  <span className="text-lg w-8 text-center">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '🏅'}</span>
-                  <div className="flex-1 min-w-0">
+                <div key={i} className="flex items-center justify-between py-2.5 border-b border-gray-800/60 last:border-0">
+                  <div className="min-w-0">
                     <p className="text-sm font-medium text-white truncate">{pr.exerciseName}</p>
                     <p className="text-xs text-gray-500">{shortDate(pr.date)}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-yellow-400 font-mono">{pr.weight} kg</p>
+                  <div className="text-right flex-shrink-0 ml-3">
+                    <p className="text-sm font-bold text-white font-mono">{pr.weight} kg</p>
                     <p className="text-xs text-gray-600">× {pr.reps} reps</p>
                   </div>
                 </div>
@@ -205,48 +196,41 @@ export default function ProgressView({ history, weights = [] }) {
         {/* Weekly Volume */}
         {weeklyVolume.length > 1 && (
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <BarChart2 size={15} className="text-blue-400" />
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Weekly Volume (kg)</p>
-            </div>
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-4">
-              <ResponsiveContainer width="100%" height={160}>
-                <BarChart data={weeklyVolume} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
-                  <XAxis dataKey="week" tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="volume" name="volume" radius={[4, 4, 0, 0]}>
-                    {weeklyVolume.map((_, i) => (
-                      <Cell key={i} fill={i === weeklyVolume.length - 1 ? '#f97316' : '#374151'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <p className="text-sm text-gray-500 mb-2">Weekly volume (kg)</p>
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={weeklyVolume} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
+                <XAxis dataKey="week" tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="volume" name="volume" radius={[4, 4, 0, 0]}>
+                  {weeklyVolume.map((_, i) => (
+                    <Cell key={i} fill={i === weeklyVolume.length - 1 ? '#f97316' : '#374151'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </section>
         )}
 
         {/* Exercise progress chart */}
         {exerciseData.length > 0 && (
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp size={15} className="text-orange-400" />
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Exercise Progress</p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm text-gray-500">Exercise trend</p>
+              <button
+                onClick={() => setShowPicker(p => !p)}
+                className="flex items-center gap-1 text-sm text-white active:opacity-70"
+              >
+                <span className="truncate max-w-[160px]">{selectedEx?.name ?? 'Select exercise'}</span>
+                <ChevronDown size={16} className="text-gray-500 flex-shrink-0" />
+              </button>
             </div>
 
             {/* Exercise picker */}
-            <div className="relative mb-3">
-              <button
-                onClick={() => setShowPicker(p => !p)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-gray-900/50 border border-gray-800 rounded-xl text-sm text-white active:border-gray-700"
-              >
-                <span className="truncate">{selectedEx?.name ?? 'Select exercise'}</span>
-                <ChevronDown size={16} className="text-gray-500 flex-shrink-0 ml-2" />
-              </button>
-
+            <div className="relative">
               {showPicker && (
-                <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-gray-900 border border-gray-700 rounded-xl overflow-hidden shadow-2xl max-h-64 overflow-y-auto">
+                <div className="absolute z-20 top-0 right-0 left-0 bg-gray-900 border border-gray-700 rounded-xl overflow-hidden shadow-2xl max-h-64 overflow-y-auto">
                   {trackableExercises.map(ex => (
                     <button
                       key={ex.id}
@@ -263,16 +247,16 @@ export default function ProgressView({ history, weights = [] }) {
             </div>
 
             {/* Metric toggle */}
-            <div className="flex gap-2 mb-3">
+            <div className="flex gap-4 mb-2">
               {[
-                { key: 'maxWeight', label: 'Max Weight' },
+                { key: 'maxWeight', label: 'Max weight' },
                 { key: 'totalVolume', label: 'Volume' },
               ].map(m => (
                 <button
                   key={m.key}
                   onClick={() => setMetric(m.key)}
-                  className={`flex-1 py-2 rounded-xl text-xs font-medium transition-colors ${
-                    metric === m.key ? 'bg-orange-500 text-white' : 'bg-gray-800 text-gray-500 active:bg-gray-700'
+                  className={`text-xs font-medium pb-1 border-b-2 transition-colors ${
+                    metric === m.key ? 'text-white border-orange-500' : 'text-gray-500 border-transparent active:text-gray-300'
                   }`}
                 >
                   {m.label}
@@ -280,45 +264,41 @@ export default function ProgressView({ history, weights = [] }) {
               ))}
             </div>
 
-            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-4">
-              <ResponsiveContainer width="100%" height={180}>
-                <LineChart data={exerciseData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
-                  <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Line
-                    type="monotone"
-                    dataKey={metric}
-                    name={metric}
-                    stroke="#f97316"
-                    strokeWidth={2.5}
-                    dot={{ fill: '#f97316', strokeWidth: 0, r: 4 }}
-                    activeDot={{ r: 6, fill: '#f97316' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+            <ResponsiveContainer width="100%" height={180}>
+              <LineChart data={exerciseData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
+                <XAxis dataKey="date" tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <Line
+                  type="monotone"
+                  dataKey={metric}
+                  name={metric}
+                  stroke="#f97316"
+                  strokeWidth={2.5}
+                  dot={{ fill: '#f97316', strokeWidth: 0, r: 4 }}
+                  activeDot={{ r: 6, fill: '#f97316' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
 
-              {exerciseData.length < 2 && (
-                <p className="text-xs text-gray-600 text-center mt-2">Log more sessions to see trends</p>
-              )}
-            </div>
+            {exerciseData.length < 2 && (
+              <p className="text-xs text-gray-600 text-center mt-2">Log more sessions to see trends</p>
+            )}
 
             {/* Last 3 sessions for this exercise */}
-            {exerciseData.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {exerciseData.slice(-3).reverse().map((d, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-gray-900/50 border border-gray-800 rounded-xl">
-                    <p className="text-sm text-gray-400">{d.date}</p>
-                    <div className="flex gap-4 text-xs font-mono">
-                      <span className="text-white">{d.maxWeight} kg</span>
-                      <span className="text-gray-500">{d.avgReps} avg reps</span>
-                      <span className="text-gray-600">{d.setsCompleted} sets</span>
-                    </div>
+            <div className="mt-2">
+              {exerciseData.slice(-3).reverse().map((d, i) => (
+                <div key={i} className="flex items-center justify-between py-2 border-b border-gray-800/60 last:border-0">
+                  <p className="text-sm text-gray-400">{d.date}</p>
+                  <div className="flex gap-4 text-xs font-mono">
+                    <span className="text-white">{d.maxWeight} kg</span>
+                    <span className="text-gray-500">{d.avgReps} avg reps</span>
+                    <span className="text-gray-600">{d.setsCompleted} sets</span>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
           </section>
         )}
       </div>
