@@ -4,6 +4,7 @@ import { SESSIONS, getSessionColor, RATINGS } from '../data/workoutPlan'
 import ExerciseCard from './ExerciseCard'
 import RestTimer from './RestTimer'
 import WarmupCooldown from './WarmupCooldown'
+import { useDraftSession } from '../hooks/useDraftSession'
 
 function getPrevSets(exerciseId, sessionKey, history) {
   const prev = [...history].reverse().find(h =>
@@ -22,20 +23,32 @@ function buildInitialSets(exercise, prevSets) {
   }))
 }
 
-export default function WorkoutSession({ sessionKey, history, onComplete, onCancel, saveError, onRetrySave }) {
+export default function WorkoutSession({ sessionKey, history, onComplete, onCancel, saveError, onRetrySave, userId, draftData }) {
   const session = SESSIONS[sessionKey]
   const colors = getSessionColor(sessionKey)
+  const draft = useDraftSession(userId)
 
-  const [phase, setPhase] = useState(() => session.isHomeSession ? 'workout' : 'warmup')
+  const [phase, setPhase] = useState(() => {
+    if (draftData) return 'workout'
+    return session.isHomeSession ? 'workout' : 'warmup'
+  })
 
-  const [exercises, setExercises] = useState(() =>
-    session.exercises.map(ex => ({ ...ex, uid: crypto.randomUUID() }))
-  )
-  const [exerciseStates, setExerciseStates] = useState(() =>
-    session.exercises.map(ex => ({
+  const [exercises, setExercises] = useState(() => {
+    if (draftData?.exercises?.length && draftData.exercises[0]?.def) {
+      return draftData.exercises.map(e => ({
+        ...e.def, id: e.exerciseId, name: e.exerciseName, uid: crypto.randomUUID(),
+      }))
+    }
+    return session.exercises.map(ex => ({ ...ex, uid: crypto.randomUUID() }))
+  })
+  const [exerciseStates, setExerciseStates] = useState(() => {
+    if (draftData?.exercises?.length && draftData.exercises[0]?.def) {
+      return draftData.exercises.map(e => ({ sets: e.sets }))
+    }
+    return session.exercises.map(ex => ({
       sets: buildInitialSets(ex, getPrevSets(ex.id, sessionKey, history)),
     }))
-  )
+  })
 
   const [expandedIdx, setExpandedIdx] = useState(0)
   const [restTimer, setRestTimer] = useState(null)
@@ -78,16 +91,41 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
   // Elapsed timer — only counts during workout phase; never reset once started
   const [elapsed, setElapsed] = useState(0)
   const workoutStartRef = useRef(null)
+  const elapsedRef = useRef(0)
 
   useEffect(() => {
     if (phase !== 'workout') return
-    // Only set the start time once — don't reset it if effect re-runs
-    if (!workoutStartRef.current) workoutStartRef.current = Date.now()
+    if (!workoutStartRef.current) {
+      workoutStartRef.current = Date.now() - (draftData?.durationSeconds ?? 0) * 1000
+    }
     const t = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - workoutStartRef.current) / 1000))
+      const e = Math.floor((Date.now() - workoutStartRef.current) / 1000)
+      elapsedRef.current = e
+      setElapsed(e)
     }, 1000)
     return () => clearInterval(t)
   }, [phase])
+
+  // Create draft when entering workout, or resume existing
+  useEffect(() => {
+    if (phase !== 'workout') return
+    if (draftData) {
+      draft.resume(draftData.id)
+    } else if (!session.isHomeSession) {
+      draft.createDraft(sessionKey, exercises, exerciseStates)
+    }
+  }, [phase]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-save draft on exercise/set changes (debounced inside hook)
+  const exercisesRef = useRef(exercises)
+  const statesRef = useRef(exerciseStates)
+  exercisesRef.current = exercises
+  statesRef.current = exerciseStates
+
+  useEffect(() => {
+    if (phase !== 'workout' || !draft.draftId) return
+    draft.save(exercises, exerciseStates, elapsedRef.current)
+  }, [exerciseStates, exercises, draft.draftId, phase]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     return () => {
@@ -257,11 +295,16 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
   }
 
   const handleFinish = () => {
+    // Flush draft with final state before transitioning
+    if (draft.draftId) {
+      draft.flush(exercises, exerciseStates, elapsed)
+    }
     const record = {
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
       sessionKey,
       durationSeconds: elapsed,
+      _draftId: draft.draftId || null,
       exercises: session.isHomeSession
         ? []
         : exercises.map((ex, i) => ({
@@ -308,7 +351,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
                 ? () => { cooldownRecordRef.current = null; setCooldownRecord(null); setPhase('workout') }
                 : (phase === 'workout' && completedSets > 0)
                   ? () => setConfirmExit(true)
-                  : onCancel
+                  : () => { draft.discard(); onCancel() }
             }
             className="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-800 active:bg-gray-700"
           >
@@ -552,7 +595,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
                 Keep training
               </button>
               <button
-                onClick={() => { setConfirmExit(false); onCancel() }}
+                onClick={() => { setConfirmExit(false); draft.discard(); onCancel() }}
                 className="flex-1 py-3 rounded-xl bg-red-500/15 text-red-400 font-semibold text-sm active:bg-red-500/25"
               >
                 Discard
