@@ -4,6 +4,7 @@ import { SESSIONS, getSessionColor, RATINGS } from '../data/workoutPlan'
 import ExerciseCard from './ExerciseCard'
 import RestTimer from './RestTimer'
 import WarmupCooldown from './WarmupCooldown'
+import ExerciseHistory from './ExerciseHistory'
 import { useDraftSession } from '../hooks/useDraftSession'
 
 function getPrevSets(exerciseId, sessionKey, history) {
@@ -60,6 +61,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
   const cooldownRecordRef = useRef(null)
   const [confirmExit, setConfirmExit] = useState(false)
   const [showRating, setShowRating] = useState(false)
+  const [historyModal, setHistoryModal] = useState(null)
   const finishRecordRef = useRef(null)
 
   // Personal-record celebration
@@ -196,22 +198,26 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
 
   // Fix: derive all-done check from the updated state inside the functional setter
   const toggleSet = (exIdx, setIdx, completed) => {
-    setExerciseStates(prev => {
-      const updated = prev.map((es, i) =>
-        i !== exIdx ? es : {
-          ...es,
-          sets: es.sets.map((s, j) => j === setIdx ? { ...s, completed } : s),
-        }
-      )
-      if (completed) {
-        const allExDone = updated[exIdx].sets.every(s => s.completed)
-        if (allExDone && exIdx < exercises.length - 1) {
-          setTimeout(() => setExpandedIdx(exIdx + 1), 400)
-        }
+    const newStates = exerciseStates.map((es, i) =>
+      i !== exIdx ? es : {
+        ...es,
+        sets: es.sets.map((s, j) => j === setIdx ? { ...s, completed } : s),
       }
-      return updated
-    })
-    if (completed) maybeCelebratePR(exercises[exIdx], exerciseStates[exIdx]?.sets[setIdx])
+    )
+    setExerciseStates(newStates)
+
+    if (completed) {
+      const allExDone = newStates[exIdx].sets.every(s => s.completed)
+      if (allExDone && exIdx < exercises.length - 1) {
+        setTimeout(() => setExpandedIdx(exIdx + 1), 400)
+      }
+      maybeCelebratePR(exercises[exIdx], newStates[exIdx]?.sets[setIdx])
+      const ex = exercises[exIdx]
+      const allDone = newStates.every(es => es.sets.every(s => s.completed))
+      if (ex.rest > 0 && !ex.isCardio && !allDone) {
+        setRestTimer({ duration: ex.rest })
+      }
+    }
   }
 
   const addCustomExercise = () => {
@@ -451,7 +457,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
                 onToggleExpand={() => setExpandedIdx(expandedIdx === i ? -1 : i)}
                 onSetComplete={(setIdx, completed) => toggleSet(i, setIdx, completed)}
                 onSetUpdate={(setIdx, field, val) => updateSetField(i, setIdx, field, val)}
-                onRestStart={(dur) => setRestTimer({ duration: dur })}
+                onShowHistory={(id, name) => setHistoryModal({ id, name })}
                 editMode={editMode}
                 onDelete={editMode ? () => deleteExercise(i) : undefined}
                 onSwap={(alt) => handleSwapExercise(i, alt)}
@@ -550,6 +556,15 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
           duration={restTimer.duration}
           onDone={() => setRestTimer(null)}
           onSkip={() => setRestTimer(null)}
+        />
+      )}
+
+      {historyModal && (
+        <ExerciseHistory
+          exerciseId={historyModal.id}
+          exerciseName={historyModal.name}
+          history={history}
+          onClose={() => setHistoryModal(null)}
         />
       )}
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, ExternalLink, Check, Timer, Trash2, TrendingUp, Zap, Circle, CheckCircle2, Info } from 'lucide-react'
+import { ChevronDown, ChevronUp, ExternalLink, Check, Trash2, TrendingUp, Zap, Circle, CheckCircle2, Info, ArrowUp, Minus } from 'lucide-react'
 import { getYouTubeSearchUrl, estimateOneRepMax } from '../data/workoutPlan'
 import MuscleMap from './MuscleMap'
 
@@ -11,7 +11,7 @@ export default function ExerciseCard({
   onSetUpdate,
   isExpanded,
   onToggleExpand,
-  onRestStart,
+  onShowHistory,
   onDelete,
   editMode,
   onSwap,
@@ -112,14 +112,24 @@ export default function ExerciseCard({
           {/* Last time / progressive overload */}
           {!isCardio && prevDone.length > 0 && (
             <div>
-              <p className="text-sm text-gray-500">
-                Last time{' '}
-                <span className="text-gray-300 font-mono">
-                  {isTime
-                    ? prevDone.map(s => `${s.duration || 0}s`).join('  ')
-                    : prevDone.map(s => `${s.weight || 0}×${s.reps || 0}`).join('  ')}
-                </span>
-              </p>
+              <div className="flex items-baseline justify-between">
+                <p className="text-sm text-gray-500">
+                  Last time{' '}
+                  <span className="text-gray-300 font-mono">
+                    {isTime
+                      ? prevDone.map(s => `${s.duration || 0}s`).join('  ')
+                      : prevDone.map(s => `${s.weight || 0}×${s.reps || 0}`).join('  ')}
+                  </span>
+                </p>
+                {onShowHistory && (
+                  <button
+                    onClick={() => onShowHistory(exercise.id, name)}
+                    className="text-xs text-gray-600 active:text-gray-400"
+                  >
+                    All history
+                  </button>
+                )}
+              </div>
               {overloadTip && (
                 <p className="flex items-center gap-1 text-sm text-orange-400 mt-1 font-medium">
                   <TrendingUp size={13} /> {overloadTip}
@@ -149,10 +159,8 @@ export default function ExerciseCard({
                     prev={prev}
                     isTime={isTime}
                     duration={duration}
-                    rest={rest}
                     onToggle={() => handleSetToggle(idx)}
                     onUpdate={(field, val) => onSetUpdate(idx, field, val)}
-                    onRestStart={onRestStart}
                   />
                 )
               })}
@@ -261,7 +269,24 @@ export default function ExerciseCard({
   )
 }
 
-function SetRow({ idx, set, prev, isTime, duration, rest, onToggle, onUpdate, onRestStart }) {
+function getDelta(set, prev, isTime) {
+  if (!set.completed || !prev) return null
+  if (isTime) {
+    const cur = set.duration || 0
+    const old = prev.duration || 0
+    if (cur > old) return 'up'
+    if (cur < old) return 'down'
+    return 'same'
+  }
+  const cw = set.weight || 0, cr = set.reps || 0
+  const pw = prev.weight || 0, pr = prev.reps || 0
+  if (cw > pw || (cw === pw && cr > pr)) return 'up'
+  if (cw < pw || (cw === pw && cr < pr)) return 'down'
+  return 'same'
+}
+
+function SetRow({ idx, set, prev, isTime, duration, onToggle, onUpdate }) {
+  const delta = getDelta(set, prev, isTime)
   return (
     <div className={`flex items-center gap-2 rounded-xl px-3 py-2.5 transition-colors ${
       set.completed ? 'bg-green-500/10 border border-green-500/20' : 'bg-gray-900/60 border border-gray-700/40'
@@ -313,15 +338,8 @@ function SetRow({ idx, set, prev, isTime, duration, rest, onToggle, onUpdate, on
         <Check size={16} strokeWidth={2.5} />
       </button>
 
-      {set.completed && rest > 0 && (
-        <button
-          onClick={() => onRestStart(rest)}
-          className="w-9 h-9 rounded-xl flex items-center justify-center bg-orange-500/15 text-orange-400 active:bg-orange-500/30 flex-shrink-0"
-          title="Start rest timer"
-        >
-          <Timer size={14} />
-        </button>
-      )}
+      {delta === 'up' && <ArrowUp size={14} className="text-green-400 flex-shrink-0" />}
+      {delta === 'same' && <Minus size={14} className="text-gray-600 flex-shrink-0" />}
     </div>
   )
 }

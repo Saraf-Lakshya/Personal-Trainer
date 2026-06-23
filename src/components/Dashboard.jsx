@@ -1,6 +1,31 @@
 import { useState } from 'react'
-import { TrendingUp, TrendingDown, ChevronRight, Check, Plus } from 'lucide-react'
+import { TrendingUp, TrendingDown, ChevronRight, Check, Plus, Download } from 'lucide-react'
 import { SESSIONS, SESSION_META, WEEKS, getSessionColor, getTodayScheduleInfo } from '../data/workoutPlan'
+
+function exportCsv(sessions) {
+  const rows = ['Date,Session,Exercise,Set,Weight (kg),Reps,Duration (s)']
+  for (const s of sessions) {
+    const label = SESSION_META[s.sessionKey]?.label ?? s.sessionKey
+    if (!s.exercises?.length) {
+      rows.push(`${s.date},${label},,,,`)
+      continue
+    }
+    for (const ex of s.exercises) {
+      for (let i = 0; i < ex.sets.length; i++) {
+        const set = ex.sets[i]
+        if (!set.completed) continue
+        rows.push(`${s.date},${label},${ex.exerciseName},${i + 1},${set.weight || ''},${set.reps || ''},${set.duration || ''}`)
+      }
+    }
+  }
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `workouts-${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 const SESSION_ORDER = ['A', 'B', 'C', 'D', 'E']
 
@@ -47,6 +72,12 @@ export default function Dashboard({ history, user, weights, onLogWeight, onStart
                   className="w-full px-3 py-3 text-left text-sm text-gray-200 active:bg-gray-700"
                 >
                   🔑 Change Password
+                </button>
+                <button
+                  onClick={() => { setShowMenu(false); exportCsv(history) }}
+                  className="w-full px-3 py-3 text-left text-sm text-gray-200 active:bg-gray-700 border-t border-gray-700 flex items-center gap-2"
+                >
+                  <Download size={14} /> Export CSV
                 </button>
                 <button
                   onClick={() => { setShowMenu(false); onSignOut() }}
