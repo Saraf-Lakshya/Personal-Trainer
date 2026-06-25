@@ -208,13 +208,26 @@ export default function ExerciseCard({
           )}
 
           {isCardio && (
-            <div className="bg-gray-900/60 rounded-xl p-3">
-              <p className="text-sm text-gray-300">
-                Target: <span className="text-white font-medium">{duration} minutes</span>
-              </p>
-              {cues?.length > 0 && (
-                <p className="text-xs text-gray-500 mt-1">{cues[0]}</p>
-              )}
+            <div className="space-y-3">
+              <div className="bg-gray-900/60 rounded-xl p-3">
+                <p className="text-sm text-gray-300">
+                  Target: <span className="text-white font-medium">{duration} minutes</span>
+                </p>
+                {cues?.length > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">{cues[0]}</p>
+                )}
+              </div>
+              <button
+                onClick={() => handleSetToggle(0)}
+                className={`w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors ${
+                  currentSets[0]?.completed
+                    ? 'bg-green-500/15 border border-green-500/30 text-green-400'
+                    : 'bg-gray-900/60 border border-gray-700/40 text-gray-400 active:bg-gray-800'
+                }`}
+              >
+                <Check size={16} />
+                {currentSets[0]?.completed ? 'Done' : 'Mark as Done'}
+              </button>
             </div>
           )}
 
