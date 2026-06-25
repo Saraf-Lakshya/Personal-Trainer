@@ -44,8 +44,11 @@ export default function ExerciseHistory({ exerciseId, exerciseName, history, onC
                   </div>
                   <p className="text-white font-mono text-sm mt-1">
                     {entry.sets.map((s, j) => {
-                      if (s.duration > 0 && !s.weight) return `${s.duration}s`
-                      return `${s.weight || 0}×${s.reps || 0}`
+                      let txt
+                      if (s.duration > 0 && !s.weight) txt = `${s.duration}s`
+                      else txt = `${s.weight || 0}×${s.reps || 0}`
+                      if (s.drops?.length) txt += s.drops.map(d => ` → ${d.weight}×${d.reps}`).join('')
+                      return txt
                     }).join('   ')}
                   </p>
                 </div>

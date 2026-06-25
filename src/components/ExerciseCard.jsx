@@ -152,16 +152,49 @@ export default function ExerciseCard({
               {currentSets.map((set, idx) => {
                 const prev = prevSets?.[idx]
                 return (
-                  <SetRow
-                    key={idx}
-                    idx={idx}
-                    set={set}
-                    prev={prev}
-                    isTime={isTime}
-                    duration={duration}
-                    onToggle={() => handleSetToggle(idx)}
-                    onUpdate={(field, val) => onSetUpdate(idx, field, val)}
-                  />
+                  <div key={idx} className="space-y-1.5">
+                    <SetRow
+                      idx={idx}
+                      set={set}
+                      prev={prev}
+                      isTime={isTime}
+                      duration={duration}
+                      onToggle={() => handleSetToggle(idx)}
+                      onUpdate={(field, val) => onSetUpdate(idx, field, val)}
+                    />
+                    {set.completed && !isTime && (
+                      <>
+                        {(set.drops || []).map((drop, di) => (
+                          <DropRow
+                            key={di}
+                            drop={drop}
+                            onChange={(field, val) => {
+                              const drops = [...(set.drops || [])]
+                              drops[di] = { ...drops[di], [field]: val }
+                              onSetUpdate(idx, 'drops', drops)
+                            }}
+                            onRemove={() => {
+                              const drops = (set.drops || []).filter((_, i) => i !== di)
+                              onSetUpdate(idx, 'drops', drops.length ? drops : undefined)
+                            }}
+                          />
+                        ))}
+                        <button
+                          onClick={() => {
+                            const lastWeight = set.drops?.length
+                              ? set.drops[set.drops.length - 1].weight
+                              : set.weight || 0
+                            const dropWeight = Math.round((lastWeight * 0.7) / 2.5) * 2.5
+                            const drops = [...(set.drops || []), { weight: dropWeight, reps: set.reps || 0 }]
+                            onSetUpdate(idx, 'drops', drops)
+                          }}
+                          className="flex items-center gap-1 text-xs text-amber-500/70 active:text-amber-400 py-1 pl-6"
+                        >
+                          + Drop
+                        </button>
+                      </>
+                    )}
+                  </div>
                 )
               })}
 
@@ -177,9 +210,11 @@ export default function ExerciseCard({
           {isCardio && (
             <div className="bg-gray-900/60 rounded-xl p-3">
               <p className="text-sm text-gray-300">
-                Target: <span className="text-white font-medium">{duration} minutes</span> at incline 8–12%, speed 3.5–4.5 km/h
+                Target: <span className="text-white font-medium">{duration} minutes</span>
               </p>
-              <p className="text-xs text-gray-500 mt-1">Zone 2 — you should be able to hold a conversation</p>
+              {cues?.length > 0 && (
+                <p className="text-xs text-gray-500 mt-1">{cues[0]}</p>
+              )}
             </div>
           )}
 
@@ -283,6 +318,37 @@ function getDelta(set, prev, isTime) {
   if (cw > pw || (cw === pw && cr > pr)) return 'up'
   if (cw < pw || (cw === pw && cr < pr)) return 'down'
   return 'same'
+}
+
+function DropRow({ drop, onChange, onRemove }) {
+  return (
+    <div className="flex items-center gap-2 ml-5 rounded-xl px-3 py-2 bg-amber-500/5 border border-amber-500/15">
+      <span className="text-xs text-amber-500/60 font-medium">↳</span>
+      <input
+        type="number"
+        inputMode="decimal"
+        value={drop.weight || ''}
+        placeholder="0"
+        onChange={e => onChange('weight', parseFloat(e.target.value) || 0)}
+        className="w-14 bg-gray-800 text-white text-center rounded-lg px-2 py-1.5 text-sm font-mono border border-gray-700 focus:border-amber-500 focus:outline-none placeholder:text-gray-600"
+      />
+      <span className="text-gray-600 text-xs">×</span>
+      <input
+        type="number"
+        inputMode="numeric"
+        value={drop.reps || ''}
+        placeholder="0"
+        onChange={e => onChange('reps', parseInt(e.target.value) || 0)}
+        className="w-12 bg-gray-800 text-white text-center rounded-lg px-2 py-1.5 text-sm font-mono border border-gray-700 focus:border-amber-500 focus:outline-none placeholder:text-gray-600"
+      />
+      <button
+        onClick={onRemove}
+        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-600 active:text-red-400 flex-shrink-0 text-xs"
+      >
+        ✕
+      </button>
+    </div>
+  )
 }
 
 function SetRow({ idx, set, prev, isTime, duration, onToggle, onUpdate }) {

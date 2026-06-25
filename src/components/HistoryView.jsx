@@ -32,7 +32,11 @@ function formatDuration(secs) {
 function getTotalVolume(session) {
   if (!session?.exercises) return 0
   return session.exercises.reduce((acc, ex) =>
-    acc + ex.sets.reduce((a, s) => a + ((s.weight || 0) * (s.reps || 0)), 0), 0
+    acc + ex.sets.reduce((a, s) => {
+      let vol = (s.weight || 0) * (s.reps || 0)
+      if (s.drops) vol += s.drops.reduce((d, drop) => d + (drop.weight || 0) * (drop.reps || 0), 0)
+      return a + vol
+    }, 0), 0
   )
 }
 
@@ -130,6 +134,7 @@ export default function HistoryView({ history, onDelete }) {
                                 <span key={i} className="text-xs bg-gray-900 text-gray-400 px-2 py-1 rounded-lg font-mono">
                                   {s.weight > 0 ? `${s.weight}kg` : ''}{s.weight > 0 && s.reps ? ' × ' : ''}{s.reps > 0 ? `${s.reps}r` : ''}{s.duration > 0 ? `${s.duration}s` : ''}
                                   {!s.weight && !s.reps && !s.duration ? '✓' : ''}
+                                  {s.drops?.length > 0 && s.drops.map((d, di) => ` → ${d.weight}×${d.reps}`).join('')}
                                 </span>
                               ))}
                             </div>

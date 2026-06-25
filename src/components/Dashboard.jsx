@@ -15,6 +15,12 @@ function exportCsv(sessions) {
         const set = ex.sets[i]
         if (!set.completed) continue
         rows.push(`${s.date},${label},${ex.exerciseName},${i + 1},${set.weight || ''},${set.reps || ''},${set.duration || ''}`)
+        if (set.drops) {
+          for (let d = 0; d < set.drops.length; d++) {
+            const drop = set.drops[d]
+            rows.push(`${s.date},${label},${ex.exerciseName},${i + 1}D${d + 1},${drop.weight || ''},${drop.reps || ''},`)
+          }
+        }
       }
     }
   }
