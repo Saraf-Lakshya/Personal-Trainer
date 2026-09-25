@@ -31,7 +31,9 @@ export default function ExerciseCard({
     const topWeight = Math.max(...prevDone.map(s => s.weight || 0))
     const hitAllReps = reps > 0 && prevDone.length >= sets && prevDone.every(s => (s.reps || 0) >= reps)
     if (topWeight > 0 && hitAllReps) {
-      overloadTip = `You hit all your reps last time — try ${topWeight + 2.5} kg today`
+      // ~7.5% jump, rounded to 0.5 kg, kept between 0.5 and 2.5 kg — so light lifts don't double
+      const step = Math.min(2.5, Math.max(0.5, Math.round((topWeight * 0.075) / 0.5) * 0.5))
+      overloadTip = `You hit all your reps last time — try ${Math.round((topWeight + step) * 100) / 100} kg today`
     }
   }
 
