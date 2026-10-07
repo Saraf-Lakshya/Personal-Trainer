@@ -10,6 +10,7 @@ import UpdatePassword from './components/UpdatePassword'
 import { useAuth } from './hooks/useAuth'
 import { useWorkoutData } from './hooks/useWorkoutData'
 import { useBodyWeight } from './hooks/useBodyWeight'
+import { useAppUpdate } from './hooks/useAppUpdate'
 import { SESSION_META, getSessionColor } from './data/workoutPlan'
 
 function LoadingScreen() {
@@ -57,6 +58,9 @@ export default function App() {
   const [activeDraftData, setActiveDraftData] = useState(null)
   const [changingPassword, setChangingPassword] = useState(false)
   const [failedRecord, setFailedRecord] = useState(null)
+
+  // Pick up new app versions, but never reload during a workout or unsaved save
+  useAppUpdate(!activeSessionKey && !failedRecord)
 
   // Still resolving auth state
   if (user === undefined) return <LoadingScreen />
