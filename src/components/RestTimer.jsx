@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { SkipForward, Plus } from 'lucide-react'
 import { useTimer } from '../hooks/useTimer'
+import { beep } from '../lib/beep'
 
 const RADIUS = 52
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
 export default function RestTimer({ duration, onDone, onSkip }) {
-  const { seconds, start, reset, add } = useTimer(duration, onDone)
+  // Don't auto-close at zero — beep and show "Rest over" until tapped
+  const { seconds, start, reset, add } = useTimer(duration, beep)
   // The duration the current countdown is measured against — changes when the
   // user picks a different preset or adds time, so the ring stays accurate.
   const [activeDuration, setActiveDuration] = useState(duration)
@@ -64,6 +66,14 @@ export default function RestTimer({ duration, onDone, onSkip }) {
           </div>
         </div>
 
+        {isDone ? (
+          <button
+            onClick={onDone}
+            className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-green-500 text-white font-bold text-lg active:bg-green-600 shadow-lg shadow-green-500/25"
+          >
+            Rest over — next set
+          </button>
+        ) : (
         <div className="flex items-center gap-4">
           <button
             onClick={() => { add(15); setActiveDuration(d => Math.max(d, seconds + 15)) }}
@@ -80,6 +90,7 @@ export default function RestTimer({ duration, onDone, onSkip }) {
             Skip Rest
           </button>
         </div>
+        )}
 
         <div className="flex gap-3">
           {[60, 90].map(s => (

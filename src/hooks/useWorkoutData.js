@@ -93,9 +93,14 @@ export function useWorkoutData(userId) {
       .eq('id', draftId)
       .eq('user_id', userId)
       .select()
-      .single()
     if (error) throw error
-    let saved = fromDb(data)
+    // Draft row is gone (e.g. discarded on another device) — save as a new session instead
+    if (!data?.length) {
+      await addSession(record)
+      setPendingDraft(prev => prev?.id === draftId ? null : prev)
+      return
+    }
+    let saved = fromDb(data[0])
     if (record.rating != null) {
       const { error: rErr } = await supabase
         .from('sessions')
@@ -106,7 +111,7 @@ export function useWorkoutData(userId) {
     }
     setSessions(prev => [...prev, saved])
     setPendingDraft(null)
-  }, [userId])
+  }, [userId, addSession])
 
   const discardDraft = useCallback(async (id) => {
     if (!id || !userId) return

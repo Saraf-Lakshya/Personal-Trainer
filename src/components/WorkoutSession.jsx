@@ -182,7 +182,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
     setPendingUndo(null)
   }
 
-  const totalSets = exercises.reduce((acc, ex) => acc + (ex.isCardio ? 1 : ex.sets), 0)
+  const totalSets = exercises.reduce((acc, ex, i) => acc + (ex.isCardio ? 1 : exerciseStates[i].sets.length), 0)
   const completedSets = exerciseStates.reduce((acc, es) => acc + es.sets.filter(s => s.completed).length, 0)
   const progressPct = totalSets > 0 ? (completedSets / totalSets) * 100 : 0
   const allComplete = progressPct === 100
@@ -194,6 +194,32 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
         sets: es.sets.map((s, j) => j === setIdx ? { ...s, [field]: val } : s),
       }
     ))
+  }
+
+  const addSet = (exIdx) => {
+    const ex = exercises[exIdx]
+    setExerciseStates(prev => prev.map((es, i) => {
+      if (i !== exIdx) return es
+      const last = es.sets[es.sets.length - 1]
+      return {
+        ...es,
+        sets: [...es.sets, {
+          weight: last?.weight ?? 0,
+          reps: ex.reps ?? last?.reps ?? 0,
+          duration: ex.duration ?? 0,
+          completed: false,
+        }],
+      }
+    }))
+  }
+
+  const removeSet = (exIdx) => {
+    const removed = exerciseStates[exIdx].sets.at(-1)
+    if (exerciseStates[exIdx].sets.length <= 1) return
+    setExerciseStates(prev => prev.map((es, i) => i !== exIdx ? es : { ...es, sets: es.sets.slice(0, -1) }))
+    triggerUndo(`Removed set ${exerciseStates[exIdx].sets.length}`, () => {
+      setExerciseStates(prev => prev.map((es, i) => i !== exIdx ? es : { ...es, sets: [...es.sets, removed] }))
+    })
   }
 
   // Celebrate when a completed set beats the heaviest weight ever done for this
@@ -485,6 +511,8 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
                 onDelete={editMode ? () => deleteExercise(i) : undefined}
                 onSwap={(alt) => handleSwapExercise(i, alt)}
                 onAddAfter={(alt) => handleAddAfter(i, alt)}
+                onAddSet={ex.isCardio ? undefined : () => addSet(i)}
+                onRemoveSet={ex.isCardio ? undefined : () => removeSet(i)}
               />
             ))}
 

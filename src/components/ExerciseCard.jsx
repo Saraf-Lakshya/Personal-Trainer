@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, ExternalLink, Check, Trash2, TrendingUp, Zap, Circle, CheckCircle2, Info, ArrowUp, Minus } from 'lucide-react'
+import { ChevronDown, ChevronUp, ExternalLink, Check, Trash2, TrendingUp, Zap, Circle, CheckCircle2, Info, ArrowUp, Minus, Plus } from 'lucide-react'
 import { getYouTubeSearchUrl, estimateOneRepMax } from '../data/workoutPlan'
 import MuscleMap from './MuscleMap'
 
@@ -16,9 +16,13 @@ export default function ExerciseCard({
   editMode,
   onSwap,
   onAddAfter,
+  onAddSet,
+  onRemoveSet,
 }) {
-  const { name, sets, reps, rest, muscles, cues, videoSearch, note, isCardio, isTime, duration, alternatives } = exercise
+  const { name, sets: plannedSets, reps, rest, muscles, cues, videoSearch, note, isCardio, isTime, duration, alternatives } = exercise
   const [showInfo, setShowInfo] = useState(false)
+  // Sets can be added/removed mid-workout, so count what's actually logged
+  const sets = isCardio ? plannedSets : currentSets.length
 
   const completedCount = currentSets.filter(s => s.completed).length
   const allDone = completedCount === (isCardio ? 1 : sets)
@@ -199,6 +203,27 @@ export default function ExerciseCard({
                   </div>
                 )
               })}
+
+              {(onAddSet || onRemoveSet) && (
+                <div className="flex justify-center gap-2 pt-1">
+                  {onRemoveSet && currentSets.length > 1 && (
+                    <button
+                      onClick={onRemoveSet}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-800/60 text-gray-400 text-xs font-medium active:bg-gray-700"
+                    >
+                      <Minus size={12} /> Remove set
+                    </button>
+                  )}
+                  {onAddSet && (
+                    <button
+                      onClick={onAddSet}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-800/60 text-gray-400 text-xs font-medium active:bg-gray-700"
+                    >
+                      <Plus size={12} /> Add set
+                    </button>
+                  )}
+                </div>
+              )}
 
               {best1RM > 0 && (
                 <div className="flex items-center justify-center gap-1.5 pt-1 text-xs text-gray-500">
