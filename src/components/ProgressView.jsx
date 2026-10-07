@@ -4,7 +4,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell,
 } from 'recharts'
-import { ALL_TRACKABLE_EXERCISES } from '../data/workoutPlan'
+import { ALL_TRACKABLE_EXERCISES, isSameExercise } from '../data/workoutPlan'
 
 function shortDate(isoStr) {
   const d = new Date(isoStr)
@@ -17,11 +17,11 @@ function weightShortDate(dateStr) {
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function getExerciseData(history, exerciseId) {
+function getExerciseData(history, exerciseId, exerciseName) {
   return history
-    .filter(session => session.exercises?.some(e => e.exerciseId === exerciseId))
+    .filter(session => session.exercises?.some(e => isSameExercise(e, exerciseId, exerciseName)))
     .map(session => {
-      const ex = session.exercises.find(e => e.exerciseId === exerciseId)
+      const ex = session.exercises.find(e => isSameExercise(e, exerciseId, exerciseName))
       const completedSets = ex.sets.filter(s => s.completed)
       if (!completedSets.length) return null
       const maxWeight = Math.max(...completedSets.map(s => s.weight || 0))
@@ -91,7 +91,8 @@ export default function ProgressView({ history, weights = [] }) {
   const [showPicker, setShowPicker] = useState(false)
 
   const exerciseData = useMemo(() =>
-    getExerciseData(history, selectedExercise), [history, selectedExercise]
+    getExerciseData(history, selectedExercise, ALL_TRACKABLE_EXERCISES.find(e => e.id === selectedExercise)?.name),
+    [history, selectedExercise]
   )
   const weeklyVolume = useMemo(() => getWeeklyVolume(history), [history])
   const prs = useMemo(() => getPRs(history), [history])

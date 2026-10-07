@@ -900,6 +900,15 @@ export const SESSIONS = {
   },
 }
 
+// A logged exercise matches by id, or by name (case/spacing-insensitive) so
+// typed-in custom exercises link to their history and to the catalog version.
+export const normalizeExerciseName = name => (name ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
+
+export function isSameExercise(entry, id, name) {
+  return entry.exerciseId === id ||
+    (!!name && normalizeExerciseName(entry.exerciseName) === normalizeExerciseName(name))
+}
+
 export const ALL_EXERCISES = Object.values(SESSIONS).flatMap(s => s.exercises)
 
 // Every exercise that can appear in a session — base exercises plus their

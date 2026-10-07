@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { SESSION_META } from '../data/workoutPlan'
+import { SESSION_META, isSameExercise } from '../data/workoutPlan'
 
 function formatDate(isoStr) {
   const d = new Date(isoStr)
@@ -9,7 +9,7 @@ function formatDate(isoStr) {
 export default function ExerciseHistory({ exerciseId, exerciseName, history, onClose }) {
   const entries = []
   for (const session of history) {
-    const match = session.exercises?.find(e => e.exerciseId === exerciseId)
+    const match = session.exercises?.find(e => isSameExercise(e, exerciseId, exerciseName))
     if (!match) continue
     const done = match.sets.filter(s => s.completed)
     if (!done.length) continue

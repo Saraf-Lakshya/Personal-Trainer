@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { ArrowLeft, CheckCircle, Timer, Zap, Plus, Pencil, X, RotateCcw, ExternalLink, Trophy } from 'lucide-react'
-import { SESSIONS, getSessionColor, RATINGS } from '../data/workoutPlan'
+import { SESSIONS, getSessionColor, RATINGS, ALL_TRACKABLE_EXERCISES, isSameExercise, normalizeExerciseName } from '../data/workoutPlan'
 import ExerciseCard from './ExerciseCard'
 import RestTimer from './RestTimer'
 import ExerciseHistory from './ExerciseHistory'
@@ -17,11 +17,13 @@ const COOLDOWN_EXERCISE = {
   videoSearch: null, isCardio: true, duration: 10, note: null, alternatives: [],
 }
 
-function getPrevSets(exerciseId, sessionKey, history) {
-  const prev = [...history].reverse().find(h =>
-    h.sessionKey === sessionKey && h.exercises?.some(e => e.exerciseId === exerciseId)
-  )
-  return prev?.exercises.find(e => e.exerciseId === exerciseId)?.sets ?? []
+// Most recent session (any session type) where this exercise had completed sets
+function getPrevSets(exercise, history) {
+  for (let i = history.length - 1; i >= 0; i--) {
+    const match = history[i].exercises?.find(e => isSameExercise(e, exercise.id, exercise.name))
+    if (match?.sets?.some(s => s.completed)) return match.sets
+  }
+  return []
 }
 
 function buildInitialSets(exercise, prevSets) {
@@ -60,7 +62,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
       return draftData.exercises.map(e => ({ sets: e.sets }))
     }
     const base = session.exercises.map(ex => ({
-      sets: buildInitialSets(ex, getPrevSets(ex.id, sessionKey, history)),
+      sets: buildInitialSets(ex, getPrevSets(ex, history)),
     }))
     if (!session.isHomeSession) {
       return [
@@ -95,7 +97,8 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
       for (const ex of sess.exercises ?? []) {
         for (const s of ex.sets) {
           if (s.completed && s.weight > 0 && s.reps > 0) {
-            map[ex.exerciseId] = Math.max(map[ex.exerciseId] ?? 0, s.weight)
+            const key = normalizeExerciseName(ex.exerciseName)
+            map[key] = Math.max(map[key] ?? 0, s.weight)
           }
         }
       }
@@ -201,7 +204,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
     const w = set.weight || 0
     const r = set.reps || 0
     if (w <= 0 || r <= 0) return
-    const histBest = historyPRs[ex.id] ?? 0
+    const histBest = historyPRs[normalizeExerciseName(ex.name)] ?? 0
     if (histBest <= 0) return
     const bar = Math.max(histBest, celebratedRef.current[ex.id] ?? 0)
     if (w > bar) {
@@ -241,8 +244,24 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
 
   const addCustomExercise = () => {
     if (!newExName.trim()) return
+    // Typed name matches a catalog exercise → use it, so history, cues and video carry over
+    const catalog = ALL_TRACKABLE_EXERCISES.find(
+      e => normalizeExerciseName(e.name) === normalizeExerciseName(newExName)
+    )
+    if (catalog) {
+      const { alternatives, ...def } = catalog
+      const newEx = { ...def, uid: crypto.randomUUID() }
+      setExercises(prev => [...prev, newEx])
+      setExerciseStates(prev => [...prev, { sets: buildInitialSets(newEx, getPrevSets(newEx, history)) }])
+      setNewExName('')
+      triggerUndo(`Added "${newEx.name}"`, () => {
+        setExercises(prev => prev.filter(e => e.uid !== newEx.uid))
+        setExerciseStates(prev => prev.slice(0, -1))
+      })
+      return
+    }
     const newEx = {
-      id: `custom-${Date.now()}`,
+      id: `custom-${normalizeExerciseName(newExName).replace(/[^a-z0-9]+/g, '-')}`,
       uid: crypto.randomUUID(),
       name: newExName.trim(),
       sets: newExSets,
@@ -254,12 +273,12 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
       isCustom: true,
     }
     setExercises(prev => [...prev, newEx])
-    setExerciseStates(prev => [...prev, { sets: buildInitialSets(newEx, []) }])
+    setExerciseStates(prev => [...prev, { sets: buildInitialSets(newEx, getPrevSets(newEx, history)) }])
     setNewExName('')
     setNewExSets(3)
     setNewExReps(10)
     triggerUndo(`Added "${newEx.name}"`, () => {
-      setExercises(prev => prev.filter(e => e.id !== newEx.id))
+      setExercises(prev => prev.filter(e => e.uid !== newEx.uid))
       setExerciseStates(prev => prev.slice(0, -1))
     })
   }
@@ -280,7 +299,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
       uid: crypto.randomUUID(),
       alternatives: buildSwapAlternatives(oldExercise, newExercise),
     }
-    const newState = { sets: buildInitialSets(swapped, getPrevSets(swapped.id, sessionKey, history)) }
+    const newState = { sets: buildInitialSets(swapped, getPrevSets(swapped, history)) }
     setExercises(prev => prev.map((ex, i) => i === idx ? swapped : ex))
     setExerciseStates(prev => prev.map((es, i) => i === idx ? newState : es))
     triggerUndo(`Swapped to "${newExercise.name}"`, () => {
@@ -296,7 +315,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
       uid: crypto.randomUUID(),
       alternatives: buildSwapAlternatives(source, newExercise),
     }
-    const newState = { sets: buildInitialSets(added, getPrevSets(added.id, sessionKey, history)) }
+    const newState = { sets: buildInitialSets(added, getPrevSets(added, history)) }
     setExercises(prev => [...prev.slice(0, idx + 1), added, ...prev.slice(idx + 1)])
     setExerciseStates(prev => [...prev.slice(0, idx + 1), newState, ...prev.slice(idx + 1)])
     triggerUndo(`Added "${newExercise.name}"`, () => {
@@ -455,7 +474,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
               <ExerciseCard
                 key={ex.uid}
                 exercise={ex}
-                prevSets={getPrevSets(ex.id, sessionKey, history)}
+                prevSets={getPrevSets(ex, history)}
                 currentSets={exerciseStates[i].sets}
                 isExpanded={expandedIdx === i}
                 onToggleExpand={() => setExpandedIdx(expandedIdx === i ? -1 : i)}
