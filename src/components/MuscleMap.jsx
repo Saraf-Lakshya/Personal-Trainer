@@ -39,6 +39,7 @@ const MUSCLE_REGIONS = {
   'Lower Abs':            [{ t: 'r', x: 26, y: 68, w: 18, h: 10, rx: 3 }],
   'Obliques':             [{ t: 'r', x: 20, y: 57, w: 6, h: 16, rx: 3 }, { t: 'r', x: 44, y: 57, w: 6, h: 16, rx: 3 }],
   'Quads':                [{ t: 'r', x: 22, y: 99, w: 11, h: 32, rx: 5 }, { t: 'r', x: 37, y: 99, w: 11, h: 32, rx: 5 }],
+  'Adductors':            [{ t: 'r', x: 29, y: 100, w: 5, h: 22, rx: 2 }, { t: 'r', x: 36, y: 100, w: 5, h: 22, rx: 2 }],
 
   // Back view muscles (x offset +80)
   'Traps':          [{ t: 'r', x: 103, y: 30, w: 24, h: 13, rx: 3 }],
@@ -48,6 +49,7 @@ const MUSCLE_REGIONS = {
   'Lower Back':     [{ t: 'r', x: 104, y: 65, w: 22, h: 14, rx: 3 }],
   'Triceps':        [{ t: 'r', x: 88, y: 43, w: 9, h: 20, rx: 4 }, { t: 'r', x: 133, y: 43, w: 9, h: 20, rx: 4 }],
   'Glutes':         [{ t: 'e', cx: 107, cy: 98, rx: 10, ry: 9 }, { t: 'e', cx: 123, cy: 98, rx: 10, ry: 9 }],
+  'Glute Medius':   [{ t: 'e', cx: 102, cy: 91, rx: 6, ry: 5 }, { t: 'e', cx: 128, cy: 91, rx: 6, ry: 5 }],
   'Hamstrings':     [{ t: 'r', x: 102, y: 106, w: 12, h: 26, rx: 5 }, { t: 'r', x: 116, y: 106, w: 12, h: 26, rx: 5 }],
   'Gastrocnemius':  [{ t: 'r', x: 103, y: 137, w: 10, h: 22, rx: 5 }, { t: 'r', x: 117, y: 137, w: 10, h: 22, rx: 5 }],
   'Soleus':         [{ t: 'r', x: 103, y: 150, w: 10, h: 12, rx: 5 }, { t: 'r', x: 117, y: 150, w: 10, h: 12, rx: 5 }],
