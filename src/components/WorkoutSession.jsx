@@ -81,6 +81,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
   const [newExSets, setNewExSets] = useState(3)
   const [newExReps, setNewExReps] = useState(10)
   const [confirmExit, setConfirmExit] = useState(false)
+  const [confirmFinish, setConfirmFinish] = useState(false)
   const [showRating, setShowRating] = useState(false)
   const [historyModal, setHistoryModal] = useState(null)
   const finishRecordRef = useRef(null)
@@ -484,7 +485,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
           </div>
 
           <button
-            onClick={handleFinish}
+            onClick={() => setConfirmFinish(true)}
             className="w-full py-4 rounded-2xl bg-green-500 text-white font-bold text-base flex items-center justify-center gap-2 active:bg-green-600 shadow-lg shadow-green-500/25"
           >
             <CheckCircle size={20} />
@@ -582,7 +583,7 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
           {/* Finish button */}
           <div className="fixed bottom-20 left-4 right-4 z-30">
             <button
-              onClick={handleFinish}
+              onClick={() => setConfirmFinish(true)}
               className={`w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2 transition-all ${
                 allComplete
                   ? 'bg-green-500 text-white shadow-lg shadow-green-500/25 active:bg-green-600'
@@ -638,6 +639,33 @@ export default function WorkoutSession({ sessionKey, history, onComplete, onCanc
             >
               Skip
             </button>
+          </div>
+        </div>
+      )}
+
+      {confirmFinish && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-950/80 backdrop-blur-sm px-8 animate-fade-in">
+          <div className="w-full max-w-xs bg-gray-900 border border-gray-700 rounded-2xl p-5 shadow-2xl">
+            <p className="text-white font-semibold text-center">Finish workout?</p>
+            <p className="text-gray-400 text-sm text-center mt-1">
+              {session.isHomeSession || allComplete
+                ? 'This will save the session.'
+                : `You've done ${completedSets} of ${totalSets} sets. Unfinished sets won't be logged.`}
+            </p>
+            <div className="flex gap-2 mt-5">
+              <button
+                onClick={() => setConfirmFinish(false)}
+                className="flex-1 py-3 rounded-xl bg-gray-800 text-gray-200 font-semibold text-sm active:bg-gray-700"
+              >
+                Keep training
+              </button>
+              <button
+                onClick={() => { setConfirmFinish(false); handleFinish() }}
+                className="flex-1 py-3 rounded-xl bg-green-500 text-white font-semibold text-sm active:bg-green-600"
+              >
+                Finish
+              </button>
+            </div>
           </div>
         </div>
       )}
