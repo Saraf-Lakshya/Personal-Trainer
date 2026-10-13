@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, TrendingUp } from 'lucide-react'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell,
