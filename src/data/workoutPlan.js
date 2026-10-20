@@ -468,6 +468,45 @@ export const SESSIONS = {
           },
         ],
       },
+      {
+        id: 'hammer-curl',
+        name: 'Hammer Curls',
+        sets: 3, reps: 12, rest: 60,
+        note: 'Dumbbells — palms facing each other',
+        muscles: ['Brachialis', 'Brachioradialis', 'Biceps'],
+        cues: [
+          'Neutral grip (thumbs up) throughout — don\'t rotate the wrists',
+          'Elbows pinned to your sides; only the forearms move',
+          'Curl to shoulder height, squeeze, then lower slowly (2–3 seconds)',
+          'No swinging — if your torso rocks, the weight is too heavy',
+        ],
+        videoSearch: 'hammer curl proper form brachialis tutorial',
+        alternatives: [
+          {
+            id: 'rope-hammer-curl',
+            name: 'Cable Rope Hammer Curl',
+            sets: 3, reps: 12, rest: 60,
+            muscles: ['Brachialis', 'Brachioradialis'],
+            cues: [
+              'Low pulley with a rope, thumbs up — constant tension through the rep',
+              'Elbows stay at your sides; pull the rope ends apart slightly at the top',
+            ],
+            videoSearch: 'cable rope hammer curl proper form tutorial',
+          },
+          {
+            id: 'cross-body-hammer-curl',
+            name: 'Cross-Body Hammer Curl',
+            sets: 3, reps: 12, rest: 60,
+            note: 'Alternate arms',
+            muscles: ['Brachialis', 'Brachioradialis'],
+            cues: [
+              'Curl the dumbbell across your body toward the opposite shoulder',
+              'Thumb up, elbow fixed — lower under control before switching arms',
+            ],
+            videoSearch: 'cross body hammer curl proper form tutorial',
+          },
+        ],
+      },
     ],
   },
 

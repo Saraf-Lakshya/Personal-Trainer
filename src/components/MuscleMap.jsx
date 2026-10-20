@@ -34,6 +34,7 @@ const MUSCLE_REGIONS = {
   'Lateral Delt':         [{ t: 'e', cx: 9, cy: 40, rx: 5, ry: 6 }, { t: 'e', cx: 61, cy: 40, rx: 5, ry: 6 }],
   'Biceps':               [{ t: 'r', x: 8, y: 45, w: 9, h: 18, rx: 4 }, { t: 'r', x: 53, y: 45, w: 9, h: 18, rx: 4 }],
   'Brachialis':           [{ t: 'r', x: 8, y: 57, w: 9, h: 9, rx: 4 }, { t: 'r', x: 53, y: 57, w: 9, h: 9, rx: 4 }],
+  'Brachioradialis':      [{ t: 'r', x: 9, y: 66, w: 8, h: 13, rx: 4 }, { t: 'r', x: 53, y: 66, w: 8, h: 13, rx: 4 }],
   'Core':                 [{ t: 'r', x: 26, y: 56, w: 18, h: 19, rx: 3 }],
   'Transverse Abdominis': [{ t: 'r', x: 26, y: 56, w: 18, h: 19, rx: 3 }],
   'Lower Abs':            [{ t: 'r', x: 26, y: 68, w: 18, h: 10, rx: 3 }],
